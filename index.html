@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>KARI Design Hub</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Pipeline Management для дизайна детской одежды KARI">
+    <meta name="theme-color" content="#E8601C">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="KARI Hub">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon.svg">
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=13">
+</head>
+<body>
+    <header class="header">
+        <div class="header-top">
+            <div class="logo">
+                <div class="logo-icon">K</div>
+                <div class="logo-text">
+                    <h1>KARI Design Hub</h1>
+                    <span>Pipeline Management v4.0</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="api-status-indicator" id="apiStatusIndicator">
+                    <span class="api-status-icon idle">⚪</span>
+                    <span class="api-status-text">Готов</span>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="openBackupModal()" title="Резервное копирование" style="padding: 6px 12px; font-size: 12px;">
+                    💾 Backup
+                </button>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Переключить тему">
+                    <span id="themeIcon">🌙</span>
+                </button>
+                <div class="user-menu">
+                    <div class="user-avatar">ИП</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tabs-container">
+            <div class="tab active" data-tab="capsules">
+                <span>📦</span>
+                <span>Капсулы</span>
+            </div>
+            <div class="tab" data-tab="items">
+                <span>👕</span>
+                <span>Артикулы</span>
+            </div>
+            <div class="tab" data-tab="prompts">
+                <span>✨</span>
+                <span>Промпты</span>
+            </div>
+            <div class="tab" data-tab="palette">
+                <span>🎨</span>
+                <span>Палитра</span>
+            </div>
+            <div class="tab" data-tab="checklists">
+                <span>✅</span>
+                <span>Чеклисты</span>
+            </div>
+            <div class="tab" data-tab="reports">
+                <span>🤖</span>
+                <span>Claude</span>
+            </div>
+        </div>
+    </header>
+    
+    <main class="main">
+        <!-- CAPSULES PAGE -->
+        <div class="page active" id="page-capsules">
+            <div class="page-header">
+                <div class="page-title">
+                    <h2>Капсульные коллекции</h2>
+                    <p>Управление дизайн-пайплайном</p>
+                </div>
+                <button class="btn btn-primary" onclick="openNewCapsuleModal()">
+                    <span>+</span> Новая капсула
+                </button>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon orange">📦</div>
+                    <div class="stat-value" id="statTotal">0</div>
+                    <div class="stat-label">Всего капсул</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue">⚡</div>
+                    <div class="stat-value" id="statActive">0</div>
+                    <div class="stat-label">В работе</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon yellow">👁️</div>
+                    <div class="stat-value" id="statReview">0</div>
+                    <div class="stat-label">На проверке</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">✔</div>
+                    <div class="stat-value" id="statCompleted">0</div>
+                    <div class="stat-label">Завершено</div>
+                </div>
+            </div>
+            
+            <div class="capsules-grid" id="capsulesGrid"></div>
+        </div>
+        
+        <!-- ITEMS PAGE -->
+        <div class="page" id="page-items">
+            <div class="page-header">
+                <div class="page-title">
+                    <h2>Артикулы</h2>
+                    <p>Выберите капсулу для просмотра</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PROMPTS PAGE -->
+        <div class="page" id="page-prompts">
+            <div class="page-header">
+                <div class="page-title">
+                    <h2>Библиотека промптов</h2>
+                    <p>Шаблоны для AI-генерации</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PALETTE PAGE -->
+        <div class="page" id="page-palette">
+            <div class="page-header">
+                <div class="page-title">
+                    <h2>Цветовые палитры</h2>
+                    <p>Pantone TCX</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CHECKLISTS PAGE -->
+        <div class="page" id="page-checklists">
+            <div class="page-header">
+                <div class="page-title">
+                    <h2>Контроль качества</h2>
+                    <p>Чеклисты проверки</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CLAUDE/REPORTS PAGE -->
+        <div class="page" id="page-reports">
+            <div class="page-header">
+                <div class="page-title">
+                    <h2>🤖 Claude AI</h2>
+                    <p>Анализ и генерация контента</p>
+                </div>
+                <button class="btn btn-secondary" onclick="testClaudeConnection()">
+                    🔌 Проверить подключение
+                </button>
+            </div>
+            
+            <!-- Claude Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">📊</div>
+                    <div class="stat-value" id="claudeStatReports">0</div>
+                    <div class="stat-label">Отчётов</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">✨</div>
+                    <div class="stat-value" id="claudeStatPrompts">0</div>
+                    <div class="stat-label">Промптов</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">📦</div>
+                    <div class="stat-value" id="claudeStatCapsules">0</div>
+                    <div class="stat-label">Капсул</div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="claude-actions">
+                <h3 style="margin-bottom: 16px; font-size: 16px; font-weight: 600;">⚡ Быстрые действия</h3>
+                <div class="claude-actions-grid">
+                    <div class="claude-action-card" onclick="openClaudeAnalysisModal()">
+                        <div class="action-icon">📊</div>
+                        <div class="action-title">Анализ капсулы</div>
+                        <div class="action-desc">Коммерческий анализ коллекции</div>
+                    </div>
+                    <div class="claude-action-card" onclick="openClaudePromptsModal()">
+                        <div class="action-icon">✨</div>
+                        <div class="action-title">Генерация промптов</div>
+                        <div class="action-desc">Создать промпты для артикулов</div>
+                    </div>
+                    <div class="claude-action-card" onclick="openClaudePaletteModal()">
+                        <div class="action-icon">🎨</div>
+                        <div class="action-title">Подбор палитры</div>
+                        <div class="action-desc">AI-рекомендации по цветам</div>
+                    </div>
+                    <div class="claude-action-card" onclick="openExportModal(localStorage.getItem('kari-active-capsule'))">
+                        <div class="action-icon">📤</div>
+                        <div class="action-title">Экспорт данных</div>
+                        <div class="action-desc">Excel, CSV, JSON</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reports History -->
+            <div class="claude-reports-section">
+                <h3 style="margin-bottom: 16px; font-size: 16px; font-weight: 600;">📋 История отчётов</h3>
+                <div class="reports-list" id="reportsHistory">
+                    <p class="empty-state">Отчёты появятся здесь после анализа капсул</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- NEW CAPSULE MODAL -->
+    <div class="modal-overlay" id="newCapsuleModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">✨ Создание капсулы</h3>
+                <div class="modal-close" onclick="closeModal()">&times;</div>
+            </div>
+            
+            <div class="modal-body">
+                <div class="wizard-steps">
+                    <div class="wizard-step active" data-step="1">
+                        <div class="step-num">1</div>
+                        <span class="step-label">Основа</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="wizard-step" data-step="2">
+                        <div class="step-num">2</div>
+                        <span class="step-label">Категории</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="wizard-step" data-step="3">
+                        <div class="step-num">3</div>
+                        <span class="step-label">Палитра</span>
+                    </div>
+                </div>
+                
+                <!-- Step 1: Basic Info -->
+                <div class="wizard-content" id="step1">
+                    <div class="form-group">
+                        <label class="form-label">Название капсулы *</label>
+                        <input type="text" class="form-input" id="capsuleName" placeholder="Например: SIGNAL Urban">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Сезон *</label>
+                            <select class="form-select" id="capsuleSeason">
+                                <option value="">Выберите</option>
+                                <option value="SS25">SS25</option>
+                                <option value="AW25">AW25</option>
+                                <option value="SS26">SS26</option>
+                                <option value="AW26" selected>AW26</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Целевая группа *</label>
+                            <select class="form-select" id="capsuleTarget" onchange="updateAgeOptions()">
+                                <option value="">Выберите</option>
+                                <option value="babies">Малыши (0-24 мес)</option>
+                                <option value="kids-young">Дети младшие (2-7 лет)</option>
+                                <option value="kids-older">Дети старшие (7-14 лет)</option>
+                                <option value="men">Мужчины</option>
+                                <option value="women">Женщины</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Возраст</label>
+                            <select class="form-select" id="capsuleAge">
+                                <option value="">Сначала выберите группу</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Пол</label>
+                            <select class="form-select" id="capsuleGender">
+                                <option value="unisex">Унисекс</option>
+                                <option value="boys">Мальчики</option>
+                                <option value="girls">Девочки</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Описание</label>
+                        <textarea class="form-textarea" id="capsuleDescription" placeholder="Концепция капсулы..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Categories -->
+                <div class="wizard-content" id="step2" style="display: none;">
+                    <!-- Mode selector -->
+                    <div style="display: flex; gap: 12px; margin-bottom: 20px;" id="modeSelector">
+                        <div class="mode-card active" onclick="setMode('manual')" id="modeManual">
+                            <div class="mode-icon">🖐️</div>
+                            <div class="mode-title">Вручную</div>
+                            <div class="mode-desc">Указать категории и SKU</div>
+                        </div>
+                        <div class="mode-card" onclick="setMode('claude')" id="modeClaude">
+                            <div class="mode-icon">🤖</div>
+                            <div class="mode-title">С Claude</div>
+                            <div class="mode-desc">Загрузить референс</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Manual Mode -->
+                    <div id="manualMode">
+                        <p style="color: var(--gray-500); margin-bottom: 16px;">Количество SKU по категориям:</p>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">🧥 Куртки</label>
+                                <input type="number" class="form-input category-input" id="catJackets" value="0" min="0" max="45">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">👕 Худи</label>
+                                <input type="number" class="form-input category-input" id="catHoodies" value="0" min="0" max="45">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">👖 Брюки</label>
+                                <input type="number" class="form-input category-input" id="catPants" value="0" min="0" max="45">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">👚 Футболки</label>
+                                <input type="number" class="form-input category-input" id="catTshirts" value="0" min="0" max="45">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">🎒 Аксессуары</label>
+                                <input type="number" class="form-input category-input" id="catAccessories" value="0" min="0" max="45">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">👟 Обувь</label>
+                                <input type="number" class="form-input category-input" id="catShoes" value="0" min="0" max="45">
+                            </div>
+                        </div>
+                        
+                        <div style="background: var(--gray-50); padding: 16px; border-radius: 10px; margin-top: 16px; display: flex; justify-content: space-between;">
+                            <span style="font-weight: 600;">Всего артикулов:</span>
+                            <span style="font-size: 24px; font-weight: 700; color: var(--kari-orange);" id="totalSku">0</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Claude Mode -->
+                    <div id="claudeMode" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">📷 Референс (образец)</label>
+                            <div class="image-upload-area" id="refUploadArea" style="cursor: pointer;">
+                                <div class="image-upload-icon">📷</div>
+                                <div class="image-upload-text">Нажмите для загрузки фото</div>
+                                <div class="image-upload-hint">или перетащите файл сюда</div>
+                            </div>
+                            <input type="file" id="refImageInput" accept="image/*" style="display:none;">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Сколько SKU создать</label>
+                                <select class="form-select" id="claudeSkuCount">
+                                    <option value="3">3 вариации</option>
+                                    <option value="6" selected>6 вариаций</option>
+                                    <option value="9">9 вариаций</option>
+                                    <option value="12">12 вариаций</option>
+                                    <option value="15">15 вариаций</option>
+                                    <option value="20">20 вариаций</option>
+                                    <option value="25">25 вариаций</option>
+                                    <option value="30">30 вариаций</option>
+                                    <option value="40">40 вариаций</option>
+                                    <option value="50">50 вариаций</option>
+                                    <option value="60">60 вариаций</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Образов на SKU</label>
+                                <select class="form-select" id="claudeImagesCount">
+                                    <option value="1">1 образ</option>
+                                    <option value="2">2 образа</option>
+                                    <option value="3" selected>3 образа</option>
+                                    <option value="4">4 образа</option>
+                                    <option value="5">5 образов</option>
+                                    <option value="6">6 образов</option>
+                                    <option value="8">8 образов</option>
+                                    <option value="10">10 образов</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">🎯 Акцентные элементы</label>
+                            <select class="form-select" id="claudeAccents" multiple size="4" style="height: auto;">
+                                <option value="claude" selected>🤖 Выбор Claude (по фото)</option>
+                                <option value="zipper">Молния контрастная</option>
+                                <option value="sleeve-pocket">Карман на рукаве</option>
+                                <option value="kangaroo-pocket">Карман-кенгуру</option>
+                                <option value="hood">Капюшон</option>
+                                <option value="stand-collar">Воротник-стойка</option>
+                                <option value="ribbed-cuffs">Манжеты рибана</option>
+                                <option value="reflective">Светоотражатели</option>
+                                <option value="drawstring">Кулиска/шнурки</option>
+                            </select>
+                            <p style="font-size: 11px; color: var(--gray-400); margin-top: 4px;">Ctrl+клик для мультивыбора</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">🧵 Материалы</label>
+                            <select class="form-select" id="claudeMaterials" multiple size="4" style="height: auto;">
+                                <option value="claude" selected>🤖 Выбор Claude (по фото)</option>
+                                <option value="taslan">Taslan (верхняя одежда)</option>
+                                <option value="softshell">Softshell</option>
+                                <option value="fleece">Флис</option>
+                                <option value="footer3">Футер 3-нитка</option>
+                                <option value="footer2">Футер 2-нитка</option>
+                                <option value="ribana">Рибана</option>
+                                <option value="eco-leather">Эко-кожа</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">✂️ Конструкция</label>
+                                <select class="form-select" id="claudeConstruction">
+                                    <option value="claude" selected>🤖 Выбор Claude</option>
+                                    <option value="oversize">Оверсайз</option>
+                                    <option value="straight">Прямой крой</option>
+                                    <option value="fitted">Приталенный</option>
+                                    <option value="elongated">Удлинённый</option>
+                                    <option value="cropped">Укороченный</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">🎨 Стиль</label>
+                                <select class="form-select" id="claudeStyle">
+                                    <option value="claude" selected>🤖 Выбор Claude</option>
+                                    <option value="streetwear">Streetwear</option>
+                                    <option value="sport-casual">Sport casual</option>
+                                    <option value="minimal">Minimal</option>
+                                    <option value="techwear">Techwear</option>
+                                    <option value="y2k">Y2K</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">✨ Детали</label>
+                            <select class="form-select" id="claudeDetails" multiple size="3" style="height: auto;">
+                                <option value="claude" selected>🤖 Выбор Claude (по фото)</option>
+                                <option value="print-front">Принт спереди</option>
+                                <option value="print-back">Принт на спине</option>
+                                <option value="embroidery">Вышивка</option>
+                                <option value="patch">Нашивка</option>
+                                <option value="reflective-details">Светоотражающие детали</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">💬 Дополнительные указания</label>
+                            <textarea class="form-textarea" id="claudeNotes" placeholder="Например: сохранить карман на рукаве как ключевой элемент, убрать капюшон..."></textarea>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="copyClaudeBrief()" style="width: 100%; margin-top: 8px;">
+                            📋 Скопировать бриф для Claude
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Palette -->
+                <div class="wizard-content" id="step3" style="display: none;">
+                    <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+                        <div class="mode-card active" onclick="setPaletteMode('select')" id="paletteModeSelect">
+                            <div class="mode-icon">📚</div>
+                            <div class="mode-title">Из библиотеки</div>
+                            <div class="mode-desc">Выбрать готовую</div>
+                        </div>
+                        <div class="mode-card" onclick="setPaletteMode('manual')" id="paletteModeManual">
+                            <div class="mode-icon">🎨</div>
+                            <div class="mode-title">Вручную</div>
+                            <div class="mode-desc">Задать цвета</div>
+                        </div>
+                        <div class="mode-card" onclick="setPaletteMode('claude')" id="paletteModeClaude">
+                            <div class="mode-icon">🤖</div>
+                            <div class="mode-title">Claude</div>
+                            <div class="mode-desc">По референсу</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Select from Library Mode -->
+                    <div id="paletteSelectMode">
+                        <div class="form-group">
+                            <label class="form-label">🎨 Выберите палитру</label>
+                            <div id="paletteSelectGrid" class="palette-select-grid">
+                                <!-- Палитры загрузятся через JS -->
+                            </div>
+                        </div>
+                        
+                        <div id="selectedPalettePreview" style="display: none; margin-top: 16px;">
+                            <div class="selected-palette-header">
+                                <span class="selected-palette-name"></span>
+                                <span class="selected-palette-season"></span>
+                            </div>
+                            <div class="selected-palette-colors"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Manual Palette Mode -->
+                    <div id="paletteManualMode" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">🎨 Цвета капсулы (Pantone TCX)</label>
+                            <p style="font-size: 12px; color: var(--gray-500); margin-bottom: 12px;">Добавьте цвета и укажите % распределения</p>
+                            
+                            <div id="colorsContainer">
+                                <div class="color-row">
+                                    <input type="text" class="form-input color-input" placeholder="19-4005 TCX" value="19-4005 TCX" style="width: 140px;">
+                                    <input type="text" class="form-input" placeholder="Название" value="Чёрный" style="width: 120px;">
+                                    <input type="color" class="color-picker" value="#1A1A1A" style="width: 50px; height: 42px; padding: 2px; cursor: pointer;">
+                                    <input type="number" class="form-input percent-input" value="30" min="0" max="100" style="width: 70px;" oninput="updateTotalPercent()">
+                                    <span style="color: var(--gray-500);">%</span>
+                                    <button class="btn-icon" onclick="removeColor(this)" title="Удалить">✕</button>
+                                </div>
+                                <div class="color-row">
+                                    <input type="text" class="form-input color-input" placeholder="19-4005 TCX" value="19-3906 TCX" style="width: 140px;">
+                                    <input type="text" class="form-input" placeholder="Название" value="Графитовый" style="width: 120px;">
+                                    <input type="color" class="color-picker" value="#4A4A4A" style="width: 50px; height: 42px; padding: 2px; cursor: pointer;">
+                                    <input type="number" class="form-input percent-input" value="25" min="0" max="100" style="width: 70px;" oninput="updateTotalPercent()">
+                                    <span style="color: var(--gray-500);">%</span>
+                                    <button class="btn-icon" onclick="removeColor(this)" title="Удалить">✕</button>
+                                </div>
+                                <div class="color-row">
+                                    <input type="text" class="form-input color-input" placeholder="19-4005 TCX" value="17-4402 TCX" style="width: 140px;">
+                                    <input type="text" class="form-input" placeholder="Название" value="Серый меланж" style="width: 120px;">
+                                    <input type="color" class="color-picker" value="#9A9A9A" style="width: 50px; height: 42px; padding: 2px; cursor: pointer;">
+                                    <input type="number" class="form-input percent-input" value="25" min="0" max="100" style="width: 70px;" oninput="updateTotalPercent()">
+                                    <span style="color: var(--gray-500);">%</span>
+                                    <button class="btn-icon" onclick="removeColor(this)" title="Удалить">✕</button>
+                                </div>
+                                <div class="color-row">
+                                    <input type="text" class="form-input color-input" placeholder="19-4005 TCX" value="16-1462 TCX" style="width: 140px;">
+                                    <input type="text" class="form-input" placeholder="Название" value="Оранжевый" style="width: 120px;">
+                                    <input type="color" class="color-picker" value="#E8601C" style="width: 50px; height: 42px; padding: 2px; cursor: pointer;">
+                                    <input type="number" class="form-input percent-input" value="15" min="0" max="100" style="width: 70px;" oninput="updateTotalPercent()">
+                                    <span style="color: var(--gray-500);">%</span>
+                                    <button class="btn-icon" onclick="removeColor(this)" title="Удалить">✕</button>
+                                </div>
+                                <div class="color-row">
+                                    <input type="text" class="form-input color-input" placeholder="19-4005 TCX" value="13-0550 TCX" style="width: 140px;">
+                                    <input type="text" class="form-input" placeholder="Название" value="Лаймовый" style="width: 120px;">
+                                    <input type="color" class="color-picker" value="#C8E020" style="width: 50px; height: 42px; padding: 2px; cursor: pointer;">
+                                    <input type="number" class="form-input percent-input" value="5" min="0" max="100" style="width: 70px;" oninput="updateTotalPercent()">
+                                    <span style="color: var(--gray-500);">%</span>
+                                    <button class="btn-icon" onclick="removeColor(this)" title="Удалить">✕</button>
+                                </div>
+                            </div>
+                            
+                            <button class="btn btn-secondary" onclick="addColor()" style="margin-top: 12px; width: 100%;">
+                                + Добавить цвет
+                            </button>
+                        </div>
+                        
+                        <div id="percentTotal" style="background: var(--gray-50); padding: 12px 16px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 600;">Итого:</span>
+                            <span id="totalPercentValue" style="font-size: 20px; font-weight: 700; color: var(--green);">100%</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Claude Palette Mode -->
+                    <div id="paletteClaudeMode" style="display: none;">
+                        <div style="background: var(--blue-light); padding: 20px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 48px; margin-bottom: 12px;">🤖</div>
+                            <h4 style="font-size: 16px; font-weight: 600; color: var(--gray-800); margin-bottom: 8px;">Claude подберёт палитру</h4>
+                            <p style="font-size: 13px; color: var(--gray-600);">
+                                На основе загруженного референса Claude проанализирует цвета и предложит оптимальную палитру
+                            </p>
+                        </div>
+                        
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label class="form-label">💬 Пожелания по цветам (опционально)</label>
+                            <textarea class="form-textarea" id="paletteClaudeNotes" placeholder="Например: больше нейтральных базовых цветов..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label class="form-label">💰 Ценовой сегмент</label>
+                        <select class="form-select" id="capsulePrice">
+                            <option value="standard">KARI Standard (890-9990₽)</option>
+                            <option value="premium">KARI Premium (до 19990₽)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btnPrev" onclick="prevStep()" style="display: none;">← Назад</button>
+                <button class="btn btn-primary" id="btnNext" onclick="nextStep()">Далее →</button>
+                <button class="btn btn-primary" id="btnCreate" onclick="createCapsule()" style="display: none;">✨ Создать</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ITEM MODAL -->
+    <div class="modal-overlay" id="itemModal">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="itemModalTitle">Артикул</h3>
+                <div class="modal-close" onclick="closeItemModal()">&times;</div>
+            </div>
+            <div class="modal-body" id="itemModalBody"></div>
+        </div>
+    </div>
+    
+    <!-- TOAST -->
+    <div class="toast" id="toast">
+        <span id="toastIcon">✔</span>
+        <span id="toastText">Сохранено</span>
+    </div>
+
+    <!-- Scripts (модули) -->
+    <script src="app.js?v=10"></script>
+    <script src="capsules.js?v=14"></script>
+    <script src="items.js?v=17"></script>
+    <script src="prompts.js?v=10"></script>
+    <script src="palette.js?v=10"></script>
+    <script src="checklists.js?v=10"></script>
+    <script src="export.js?v=10"></script>
+    <script src="claude-api.js?v=20"></script>
+    <script src="mega-prompt.js?v=16"></script>
+    <script src="ai-wizard.js?v=16"></script>
+    <script src="claude-page.js?v=10"></script>
+    <script src="firebase.js?v=11"></script>
+    
+    <script>
+    // Инициализация страницы Claude при переключении табов
+    document.addEventListener('DOMContentLoaded', function() {
+        // Добавляем обработчик для таба Claude
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                if (this.dataset.tab === 'reports' && typeof initClaudePage === 'function') {
+                    setTimeout(initClaudePage, 100);
+                }
+                if (this.dataset.tab === 'checklists' && typeof renderChecklistsPage === 'function') {
+                    setTimeout(renderChecklistsPage, 100);
+                }
+            });
+        });
+    });
+
+    // =============================================
+    // PWA Service Worker Registration
+    // =============================================
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then((registration) => {
+                    console.log('[PWA] Service Worker зарегистрирован:', registration.scope);
+
+                    // Проверка обновлений
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // Показываем уведомление о новой версии
+                                if (confirm('Доступна новая версия KARI Hub. Обновить?')) {
+                                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                    location.reload();
+                                }
+                            }
+                        });
+                    });
+                })
+                .catch((error) => {
+                    console.warn('[PWA] Service Worker не удалось зарегистрировать:', error);
+                });
+
+            // Слушаем сообщения от Service Worker
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data.type === 'SYNC_DATA') {
+                    console.log('[PWA] Background sync requested');
+                    if (typeof syncToCloud === 'function') {
+                        syncToCloud();
+                    }
+                }
+            });
+        });
+    }
+
+    // Обнаружение оффлайн режима
+    window.addEventListener('online', () => {
+        console.log('[PWA] Online');
+        if (typeof showToast === 'function') {
+            showToast('Подключение восстановлено', 'success');
+        }
+        if (typeof syncToCloud === 'function') {
+            syncToCloud();
+        }
+    });
+
+    window.addEventListener('offline', () => {
+        console.log('[PWA] Offline');
+        if (typeof showToast === 'function') {
+            showToast('Работаем офлайн', 'error');
+        }
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "KARI Design Hub",
+  "short_name": "KARI Hub",
+  "description": "Pipeline Management для дизайна детской одежды KARI",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#F9FAFB",
+  "theme_color": "#E8601C",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "design"],
+  "lang": "ru",
+  "prefer_related_applications": false
+}

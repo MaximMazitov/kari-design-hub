@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Auto Test</title>
+    <script src="claude-api.js"></script>
+    <script src="mega-prompt.js"></script>
+    <script src="ai-wizard.js"></script>
+</head>
+<body style="font-family: monospace; padding: 20px;">
+    <h1>🧪 Auto Test - Запуск через 3 секунды...</h1>
+    <div id="status">Ожидание...</div>
+    <pre id="log" style="background: #000; color: #0f0; padding: 15px; margin-top: 20px;"></pre>
+
+    <script>
+        const log = document.getElementById('log');
+        const status = document.getElementById('status');
+
+        function addLog(msg) {
+            log.textContent += msg + '\n';
+            console.log(msg);
+        }
+
+        setTimeout(async () => {
+            try {
+                status.textContent = '🔄 Запуск теста...';
+                addLog('===========================================');
+                addLog('🧪 ТЕСТ AI WIZARD - ИСПРАВЛЕНИЕ #2');
+                addLog('===========================================');
+                addLog('Параметры: 2 образа, 5 артикулов');
+                addLog('');
+
+                const startTime = Date.now();
+
+                const result = await window.generateCapsuleWithAI({
+                    bestseller: {
+                        sku: 'TEST-001',
+                        name: 'Куртка тестовая',
+                        description: 'Простое описание для теста',
+                        colors: 'черный, белый',
+                        price: 3990,
+                        cost: 1200,
+                        sold: 5000,
+                        imageBase64: null,
+                        hasImage: false
+                    },
+                    collection: {
+                        name: 'Test Mini',
+                        season: 'AW26',
+                        ageGroup: 'kid',
+                        gender: 'male',
+                        segment: 'standard'
+                    },
+                    requirements: {
+                        looksCount: 2,
+                        itemsCount: 5,
+                        notes: 'Минимальный тест парсинга JSON'
+                    }
+                });
+
+                const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+
+                addLog('');
+                addLog('===========================================');
+                addLog('📊 РЕЗУЛЬТАТ ТЕСТА');
+                addLog('===========================================');
+                addLog('Время выполнения: ' + duration + ' секунд');
+                addLog('Успех: ' + (result.success ? '✅ ДА' : '❌ НЕТ'));
+                addLog('');
+
+                if (result.success) {
+                    addLog('✅✅✅ ТЕСТ ПРОЙДЕН УСПЕШНО! ✅✅✅');
+                    addLog('');
+                    addLog('Создано объектов:');
+                    addLog('  • Артикулов: ' + (result.data?.items?.length || 0));
+                    addLog('  • Образов: ' + (result.data?.looks?.length || 0));
+                    addLog('  • Цветов: ' + (result.data?.palette?.colors?.length || 0));
+                    addLog('');
+
+                    if (result.data?.items?.[0]) {
+                        addLog('Пример артикула #1:');
+                        addLog('  Название: ' + result.data.items[0].name);
+                        addLog('  Категория: ' + result.data.items[0].category);
+                    }
+
+                    status.textContent = '✅ Тест успешно завершен!';
+                    status.style.color = 'green';
+                } else {
+                    addLog('❌❌❌ ТЕСТ ПРОВАЛЕН ❌❌❌');
+                    addLog('');
+                    addLog('Ошибка: ' + result.error);
+
+                    if (result.technicalError) {
+                        addLog('Техническая ошибка: ' + result.technicalError);
+                    }
+
+                    if (result.rawResponse) {
+                        addLog('');
+                        addLog('Первые 500 символов:');
+                        addLog(result.rawResponse.substring(0, 500));
+                    }
+
+                    status.textContent = '❌ Тест завершился с ошибкой';
+                    status.style.color = 'red';
+                }
+
+                addLog('===========================================');
+
+            } catch (error) {
+                addLog('');
+                addLog('❌❌❌ КРИТИЧЕСКАЯ ОШИБКА ❌❌❌');
+                addLog('Исключение: ' + error.message);
+                addLog('Stack: ' + error.stack);
+
+                status.textContent = '❌ Критическая ошибка';
+                status.style.color = 'red';
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

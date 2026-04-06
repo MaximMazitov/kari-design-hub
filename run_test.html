@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Running Test...</title>
+    <script src="claude-api.js"></script>
+    <script src="mega-prompt.js"></script>
+    <script src="ai-wizard.js"></script>
+</head>
+<body>
+    <h1>Запуск теста...</h1>
+    <p>Откройте консоль (Cmd+Option+J) для просмотра результатов</p>
+    <script>
+(async function(){
+try {
+  console.clear();
+  console.log("===========================================");
+  console.log("🧪 ТЕСТ AI WIZARD - МИНИМАЛЬНАЯ ГЕНЕРАЦИЯ");
+  console.log("===========================================");
+  console.log("Параметры: 2 образа, 5 артикулов");
+  console.log("Режим: без изображения (текстовый)");
+  console.log("");
+
+  const startTime = Date.now();
+
+  const result = await window.generateCapsuleWithAI({
+    bestseller: {
+      sku: 'TEST-001',
+      name: 'Куртка тестовая',
+      description: 'Простое описание для теста',
+      colors: 'черный, белый',
+      price: 3990,
+      cost: 1200,
+      sold: 5000,
+      imageBase64: null,
+      hasImage: false
+    },
+    collection: {
+      name: 'Test Mini',
+      season: 'AW26',
+      ageGroup: 'kid',
+      gender: 'male',
+      segment: 'standard'
+    },
+    requirements: {
+      looksCount: 2,
+      itemsCount: 5,
+      notes: 'Минимальный тест парсинга JSON'
+    }
+  });
+
+  const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+
+  console.log("");
+  console.log("===========================================");
+  console.log("📊 РЕЗУЛЬТАТ ТЕСТА");
+  console.log("===========================================");
+  console.log("Время выполнения:", duration, "секунд");
+  console.log("Успех:", result.success ? "✅ ДА" : "❌ НЕТ");
+  console.log("");
+
+  if (result.success) {
+    console.log("✅✅✅ ТЕСТ ПРОЙДЕН УСПЕШНО! ✅✅✅");
+    console.log("");
+    console.log("Создано объектов:");
+    console.log("  • Артикулов:", result.data?.items?.length || 0);
+    console.log("  • Образов:", result.data?.looks?.length || 0);
+    console.log("  • Цветов:", result.data?.palette?.colors?.length || 0);
+    console.log("");
+
+    document.body.innerHTML = '<h1 style="color: green;">✅ ТЕСТ УСПЕШНО ПРОЙДЕН!</h1><p>Артикулов: ' + (result.data?.items?.length || 0) + '</p><p>Откройте консоль для деталей</p>';
+
+    if (result.data?.items?.[0]) {
+      console.log("Пример артикула #1:");
+      console.log("  Название:", result.data.items[0].name);
+      console.log("  Категория:", result.data.items[0].category);
+      console.log("  Промпт (200 симв):", result.data.items[0].prompt?.substring(0, 200));
+    }
+
+    if (result.warnings?.length > 0) {
+      console.warn("⚠️ Предупреждения:", result.warnings);
+    }
+  } else {
+    console.log("❌❌❌ ТЕСТ ПРОВАЛЕН ❌❌❌");
+    console.log("");
+    console.error("Сообщение об ошибке:", result.error);
+
+    document.body.innerHTML = '<h1 style="color: red;">❌ ТЕСТ ПРОВАЛЕН</h1><p>Ошибка: ' + result.error + '</p><p>Откройте консоль для деталей</p>';
+
+    if (result.technicalError) {
+      console.error("Техническая ошибка:", result.technicalError);
+    }
+
+    if (result.rawResponse) {
+      console.log("");
+      console.log("Сырой ответ (первые 1000 символов):");
+      console.log(result.rawResponse.substring(0, 1000));
+    }
+  }
+
+  console.log("");
+  console.log("===========================================");
+
+} catch (error) {
+  console.log("");
+  console.log("❌❌❌ КРИТИЧЕСКАЯ ОШИБКА ❌❌❌");
+  console.error("Исключение:", error.message);
+  console.error("Stack:", error.stack);
+
+  document.body.innerHTML = '<h1 style="color: red;">❌ КРИТИЧЕСКАЯ ОШИБКА</h1><p>' + error.message + '</p><p>Откройте консоль для деталей</p>';
+}
+})();
+    </script>
+</body>
+</html>

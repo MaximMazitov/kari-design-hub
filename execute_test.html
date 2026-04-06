@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Executing Test...</title></head><body>
+<h1>Выполняется тест... Откройте консоль (Cmd+Option+J)</h1>
+<div id="status">Ожидание...</div>
+<script>
+setTimeout(() => {
+  document.getElementById('status').textContent = 'Запуск через 2 секунды...';
+}, 1000);
+
+setTimeout(() => {
+  document.getElementById('status').textContent = 'Загрузка модулей...';
+  const scripts = ['claude-api.js', 'mega-prompt.js', 'ai-wizard.js'];
+  let loaded = 0;
+  scripts.forEach(src => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = () => {
+      loaded++;
+      if(loaded === scripts.length) {
+        document.getElementById('status').textContent = 'Запуск теста...';
+        setTimeout(runTest, 1000);
+      }
+    };
+    document.head.appendChild(s);
+  });
+}, 2000);
+
+async function runTest() {
+  document.getElementById('status').innerHTML = '<h2 style="color: blue;">🔄 Тест выполняется... (30-60 сек)</h2>';
+  try {
+    console.clear();
+    console.log("===========================================");
+    console.log("🧪 ТЕСТ AI WIZARD");
+    console.log("===========================================");
+    
+    const result = await window.generateCapsuleWithAI({
+      bestseller: {sku:'TEST-001',name:'Куртка',description:'Тест',colors:'черный',price:3990,cost:1200,sold:5000,imageBase64:null,hasImage:false},
+      collection: {name:'Test',season:'AW26',ageGroup:'kid',gender:'male',segment:'standard'},
+      requirements: {looksCount:2,itemsCount:5,notes:'Тест'}
+    });
+    
+    console.log("=== РЕЗУЛЬТАТ ===");
+    if(result.success) {
+      console.log("✅ УСПЕХ! Артикулов:", result.data?.items?.length);
+      document.getElementById('status').innerHTML = '<h2 style="color: green;">✅ ТЕСТ ПРОЙДЕН!</h2><p>Артикулов: ' + (result.data?.items?.length || 0) + '</p>';
+    } else {
+      console.error("❌ ОШИБКА:", result.error);
+      document.getElementById('status').innerHTML = '<h2 style="color: red;">❌ ОШИБКА</h2><p>' + result.error + '</p>';
+    }
+  } catch(e) {
+    console.error("ИСКЛЮЧЕНИЕ:", e);
+    document.getElementById('status').innerHTML = '<h2 style="color: red;">❌ ИСКЛЮЧЕНИЕ</h2><p>' + e.message + '</p>';
+  }
+}
+</script>
+</body></html>
