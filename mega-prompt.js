@@ -103,7 +103,17 @@ const AGE_GROUPS = `ВОЗРАСТНЫЕ ГРУППЫ:
 🧑 TEEN (14-18 лет):
 - Особенности: взрослый дизайн, молодёжные тренды
 - Размеры: 158-176 (детские), XS-M (взрослые)
-- Модель для промпта: "15-year-old teenager", "16-year-old teen"`;
+- Модель для промпта: "15-year-old teenager", "16-year-old teen"
+
+👩 WOMEN (Женщины):
+- Особенности: женская одежда, актуальные фасоны, женственные силуэты
+- Размеры: XS-XXL (42-52 RU)
+- Модель для промпта: "young woman", "25-year-old woman", "adult female model"
+
+👨 MEN (Мужчины):
+- Особенности: мужская одежда, практичность, современные силуэты
+- Размеры: XS-XXL (44-54 RU)
+- Модель для промпта: "young man", "25-year-old man", "adult male model"`;
 
 // =============================================
 // 5. CATEGORY DATABASE (COMPACT)
@@ -683,9 +693,11 @@ function megaBuildCapsulePrompt(params) {
     
     const ageLabel = {
         'baby': '0-24 мес',
-        'toddler': '2-7 лет', 
+        'toddler': '2-7 лет',
         'kid': '7-14 лет',
-        'teen': '14-18 лет'
+        'teen': '14-18 лет',
+        'women': 'Женщины',
+        'men': 'Мужчины'
     }[ageGroup] || '7-14 лет';
     
     const genderLabel = {

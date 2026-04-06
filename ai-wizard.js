@@ -753,6 +753,8 @@ function renderStep4_Params() {
                         <option value="toddler" ${c.ageGroup === 'toddler' ? 'selected' : ''}>🧒 2-7 лет</option>
                         <option value="kid" ${c.ageGroup === 'kid' ? 'selected' : ''}>👦 7-14 лет</option>
                         <option value="teen" ${c.ageGroup === 'teen' ? 'selected' : ''}>🧑 14-18 лет</option>
+                        <option value="women" ${c.ageGroup === 'women' ? 'selected' : ''}>👩 Женщины</option>
+                        <option value="men" ${c.ageGroup === 'men' ? 'selected' : ''}>👨 Мужчины</option>
                     </select>
                 </div>
 
@@ -1424,7 +1426,7 @@ async function saveGeneratedCapsule() {
 // HELPERS
 // =============================================
 function getAgeLabel(age) {
-    const labels = { baby: '0-24 мес', toddler: '2-7 лет', kid: '7-14 лет', teen: '14-18 лет' };
+    const labels = { baby: '0-24 мес', toddler: '2-7 лет', kid: '7-14 лет', teen: '14-18 лет', women: 'Женщины', men: 'Мужчины' };
     return labels[age] || age;
 }
 
