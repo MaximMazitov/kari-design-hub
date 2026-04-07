@@ -372,12 +372,7 @@ let editingPaletteColors = [];
 
 function openNewPaletteModal() {
     editingPaletteId = null;
-    editingPaletteColors = [
-        { code: '', name: '', hex: '#4A4A4A', percent: 30, role: 'base' },
-        { code: '', name: '', hex: '#9A9A9A', percent: 30, role: 'base' },
-        { code: '', name: '', hex: '#E8601C', percent: 20, role: 'accent' },
-        { code: '', name: '', hex: '#FFFFFF', percent: 20, role: 'neutral' }
-    ];
+    editingPaletteColors = [];
     showPaletteEditor({
         name: '',
         season: 'AW26',
@@ -444,11 +439,14 @@ function showPaletteEditor(palette) {
 }
 
 function renderPaletteColorsEditor() {
+    if (!editingPaletteColors.length) {
+        return '<div style="padding:16px;text-align:center;color:var(--gray-500);border:1px dashed var(--gray-300);border-radius:10px;">Нажмите «+ Добавить цвет» чтобы выбрать цвет из справочника Pantone TCX</div>';
+    }
     return editingPaletteColors.map((c, idx) => `
         <div class="palette-editor-row" data-index="${idx}">
-            <input type="color" class="palette-editor-color" value="${c.hex}" onchange="updatePaletteColorHex(${idx}, this.value)">
-            <input type="text" class="form-input" placeholder="Код Pantone TCX" value="${c.code}" onchange="updatePaletteColorField(${idx}, 'code', this.value)" style="width: 130px;">
-            <input type="text" class="form-input" placeholder="Название" value="${c.name}" onchange="updatePaletteColorField(${idx}, 'name', this.value)" style="width: 120px;">
+            <div class="palette-editor-color" style="background:${c.hex};width:36px;height:36px;border-radius:8px;border:1px solid var(--gray-300);cursor:pointer;" onclick="pickPaletteColor(${idx})" title="Выбрать другой Pantone TCX"></div>
+            <input type="text" class="form-input" placeholder="Код Pantone TCX" value="${c.code}" readonly onclick="pickPaletteColor(${idx})" style="width: 130px;cursor:pointer;">
+            <input type="text" class="form-input" placeholder="Название" value="${c.name}" readonly onclick="pickPaletteColor(${idx})" style="width: 160px;cursor:pointer;">
             <select class="form-select" onchange="updatePaletteColorField(${idx}, 'role', this.value)" style="width: 110px;">
                 <option value="base" ${c.role === 'base' ? 'selected' : ''}>Базовый</option>
                 <option value="accent" ${c.role === 'accent' ? 'selected' : ''}>Акцент</option>
@@ -471,19 +469,41 @@ function updatePaletteColorField(idx, field, value) {
 }
 
 function addPaletteColor() {
-    editingPaletteColors.push({ code: '', name: '', hex: '#888888', percent: 0, role: 'base' });
-    document.getElementById('paletteColorsEditor').innerHTML = renderPaletteColorsEditor();
-    updatePaletteTotal();
+    if (typeof openPantonePicker !== 'function') {
+        showToast('Справочник Pantone TCX не загружен', 'error');
+        return;
+    }
+    openPantonePicker((c) => {
+        editingPaletteColors.push({
+            code: c.code,
+            name: c.name,
+            hex: c.hex,
+            percent: 0,
+            role: 'base'
+        });
+        document.getElementById('paletteColorsEditor').innerHTML = renderPaletteColorsEditor();
+        updatePaletteTotal();
+    });
+}
+
+function pickPaletteColor(idx) {
+    if (typeof openPantonePicker !== 'function') return;
+    openPantonePicker((c) => {
+        editingPaletteColors[idx] = {
+            ...editingPaletteColors[idx],
+            code: c.code,
+            name: c.name,
+            hex: c.hex
+        };
+        document.getElementById('paletteColorsEditor').innerHTML = renderPaletteColorsEditor();
+        updatePaletteTotal();
+    });
 }
 
 function removePaletteColor(idx) {
-    if (editingPaletteColors.length > 1) {
-        editingPaletteColors.splice(idx, 1);
-        document.getElementById('paletteColorsEditor').innerHTML = renderPaletteColorsEditor();
-        updatePaletteTotal();
-    } else {
-        showToast('Нужен хотя бы один цвет', 'error');
-    }
+    editingPaletteColors.splice(idx, 1);
+    document.getElementById('paletteColorsEditor').innerHTML = renderPaletteColorsEditor();
+    updatePaletteTotal();
 }
 
 function updatePaletteTotal() {
@@ -629,6 +649,7 @@ window.renderPaletteColorsEditor = renderPaletteColorsEditor;
 window.updatePaletteColorHex = updatePaletteColorHex;
 window.updatePaletteColorField = updatePaletteColorField;
 window.addPaletteColor = addPaletteColor;
+window.pickPaletteColor = pickPaletteColor;
 window.removePaletteColor = removePaletteColor;
 window.updatePaletteTotal = updatePaletteTotal;
 window.savePaletteFromEditor = savePaletteFromEditor;
