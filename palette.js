@@ -186,7 +186,7 @@ function renderPaletteGrid(palettes) {
     return `<div class="palettes-grid">
         ${palettes.map(p => `
             <div class="palette-card ${p.isDefault ? 'default' : ''}" onclick="openPaletteDetail('${p.id}')" style="position:relative;">
-                ${!p.isDefault ? `<button class="btn-icon" onclick="event.stopPropagation(); deletePaletteConfirm('${p.id}')" title="Удалить палитру" style="position:absolute;top:8px;right:8px;z-index:5;background:rgba(255,255,255,0.95);border:1px solid var(--gray-300);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:14px;">🗑️</button>` : ''}
+                <button class="btn-icon" onclick="event.stopPropagation(); deletePaletteConfirm('${p.id}')" title="Удалить палитру" style="position:absolute;top:8px;right:8px;z-index:5;background:rgba(255,255,255,0.95);border:1px solid var(--gray-300);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:14px;">🗑️</button>
                 <div class="palette-card-colors">
                     ${p.colors.map(c => `
                         <div class="palette-color-bar" style="background: ${c.hex}; flex: ${c.percent};" title="${c.name} (${c.percent}%)"></div>
@@ -253,7 +253,7 @@ function renderPaletteList(palettes) {
                 <div class="palette-list-actions">
                     <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); duplicatePalette('${p.id}')">🔄</button>
                     <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); exportPalette('${p.id}')">📤</button>
-                    ${!p.isDefault ? `<button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); deletePaletteConfirm('${p.id}')" title="Удалить">🗑️</button>` : ''}
+                    <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); deletePaletteConfirm('${p.id}')" title="Удалить">🗑️</button>
                 </div>
             </div>
         `).join('')}
@@ -568,11 +568,8 @@ function savePaletteFromEditor() {
 
 function deletePaletteConfirm(id) {
     const palette = getPaletteById(id);
-    if (palette?.isDefault) {
-        showToast('Нельзя удалить палитру по умолчанию', 'error');
-        return;
-    }
-    if (confirm('Удалить эту палитру?')) {
+    if (!palette) return;
+    if (confirm(`Удалить палитру «${palette.name}»? Это действие нельзя отменить.`)) {
         deletePalette(id);
         closeItemModal();
         renderPalettePage();
