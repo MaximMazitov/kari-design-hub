@@ -325,14 +325,30 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCapsules();
 });
 
-// Modal close handlers
-document.getElementById('newCapsuleModal')?.addEventListener('click', e => {
-    if (e.target.id === 'newCapsuleModal') closeModal();
-});
+// Modal close handlers — закрываем только если ВЕСЬ клик (mousedown→mouseup) был на бэкдропе.
+// Это предотвращает закрытие модалки при выделении текста внутри input/textarea и случайном
+// дрифте курсора на оверлей.
+(function attachBackdropClose(modalId, closeFn) {
+    const el = document.getElementById(modalId);
+    if (!el) return;
+    let mouseDownTarget = null;
+    el.addEventListener('mousedown', e => { mouseDownTarget = e.target; });
+    el.addEventListener('mouseup', e => {
+        if (mouseDownTarget === el && e.target === el) closeFn();
+        mouseDownTarget = null;
+    });
+})('newCapsuleModal', closeModal);
 
-document.getElementById('itemModal')?.addEventListener('click', e => {
-    if (e.target.id === 'itemModal') closeItemModal();
-});
+(function attachBackdropClose2(modalId, closeFn) {
+    const el = document.getElementById(modalId);
+    if (!el) return;
+    let mouseDownTarget = null;
+    el.addEventListener('mousedown', e => { mouseDownTarget = e.target; });
+    el.addEventListener('mouseup', e => {
+        if (mouseDownTarget === el && e.target === el) closeFn();
+        mouseDownTarget = null;
+    });
+})('itemModal', closeItemModal);
 
 // =============================================
 // ГОРЯЧИЕ КЛАВИШИ
