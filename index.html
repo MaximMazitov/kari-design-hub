@@ -330,46 +330,11 @@
                     
                     <!-- Manual Mode -->
                     <div id="manualMode">
-                        <p style="color: var(--gray-500); margin-bottom: 16px;">Количество SKU по категориям:</p>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">🧥 Куртки</label>
-                                <input type="number" class="form-input category-input" id="catJackets" value="0" min="0" max="45">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">👕 Худи</label>
-                                <input type="number" class="form-input category-input" id="catHoodies" value="0" min="0" max="45">
-                            </div>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">👖 Брюки</label>
-                                <input type="number" class="form-input category-input" id="catPants" value="0" min="0" max="45">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">👚 Футболки</label>
-                                <input type="number" class="form-input category-input" id="catTshirts" value="0" min="0" max="45">
-                            </div>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">🎒 Аксессуары</label>
-                                <input type="number" class="form-input category-input" id="catAccessories" value="0" min="0" max="45">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">👟 Обувь</label>
-                                <input type="number" class="form-input category-input" id="catShoes" value="0" min="0" max="45">
-                            </div>
-                        </div>
-                        
-                        <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--gray-200);">
-                            <label class="form-label">➕ Свои категории</label>
-                            <div id="customCategoriesList"></div>
-                            <button type="button" class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="addCustomCategory()">+ Добавить свою категорию</button>
-                        </div>
+                        <p style="color: var(--gray-500); margin-bottom: 16px;">Категории и количество SKU:</p>
+
+                        <div id="categoriesList"></div>
+
+                        <button type="button" class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="addCategoryRow()">+ Добавить категорию</button>
 
                         <div style="background: var(--gray-50); padding: 16px; border-radius: 10px; margin-top: 16px; display: flex; justify-content: space-between;">
                             <span style="font-weight: 600;">Всего артикулов:</span>
@@ -609,7 +574,7 @@
 
     <!-- Scripts (модули) -->
     <script src="app.js?v=12"></script>
-    <script src="capsules.js?v=16"></script>
+    <script src="capsules.js?v=17"></script>
     <script src="items.js?v=21"></script>
     <script src="prompts.js?v=11"></script>
     <script src="palette.js?v=16"></script>

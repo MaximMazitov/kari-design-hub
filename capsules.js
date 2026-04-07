@@ -140,9 +140,8 @@ function openNewCapsuleModal() {
     document.getElementById('capsuleAge').value = '';
     document.getElementById('capsuleGender').value = 'unisex';
     document.getElementById('capsuleDescription').value = '';
-    document.querySelectorAll('.category-input').forEach(i => i.value = 0);
-    customCategories = [];
-    renderCustomCategories();
+    categoryRows = getDefaultCategoryRows();
+    renderCategoriesList();
     updateTotalSku();
     // Сбрасываем палитру — пользователь добавляет цвета сам через пикер
     const colorsContainer = document.getElementById('colorsContainer');
@@ -197,55 +196,58 @@ function updateWizardUI() {
     document.getElementById('btnCreate').style.display = currentStep === 3 ? 'inline-flex' : 'none';
 }
 
-function updateTotalSku() {
-    const baseTotal = ['catJackets', 'catHoodies', 'catPants', 'catTshirts', 'catAccessories', 'catShoes']
-        .reduce((sum, id) => sum + parseInt(document.getElementById(id).value || 0), 0);
-    const customTotal = (customCategories || []).reduce((s, c) => s + (parseInt(c.count) || 0), 0);
-    document.getElementById('totalSku').textContent = baseTotal + customTotal;
-}
-
 // =============================================
-// CUSTOM CATEGORIES (manual mode)
+// UNIFIED CATEGORIES (manual mode)
 // =============================================
-let customCategories = [];
+let categoryRows = [];
 
-function addCustomCategory() {
-    customCategories.push({ id: 'cust-' + Date.now() + '-' + customCategories.length, name: '', count: 1 });
-    renderCustomCategories();
+function getDefaultCategoryRows() {
+    return [
+        { key: 'jackets',     name: '🧥 Куртки',     count: 0 },
+        { key: 'hoodies',     name: '👕 Худи',       count: 0 },
+        { key: 'pants',       name: '👖 Брюки',      count: 0 },
+        { key: 'tshirts',     name: '👚 Футболки',   count: 0 },
+        { key: 'accessories', name: '🎒 Аксессуары', count: 0 },
+        { key: 'shoes',       name: '👟 Обувь',      count: 0 }
+    ];
 }
 
-function removeCustomCategory(idx) {
-    customCategories.splice(idx, 1);
-    renderCustomCategories();
-    updateTotalSku();
-}
-
-function updateCustomCategory(idx, field, value) {
-    if (!customCategories[idx]) return;
-    customCategories[idx][field] = field === 'count' ? parseInt(value) || 0 : value;
-    if (field === 'count') updateTotalSku();
-}
-
-function renderCustomCategories() {
-    const container = document.getElementById('customCategoriesList');
+function renderCategoriesList() {
+    const container = document.getElementById('categoriesList');
     if (!container) return;
-    if (!customCategories.length) {
-        container.innerHTML = '<div style="color:var(--gray-500);font-size:13px;padding:8px 0;">Можно добавить любые свои категории — например «Платья», «Юбки», «Шорты»</div>';
-        return;
-    }
-    container.innerHTML = customCategories.map((c, idx) => `
+    container.innerHTML = categoryRows.map((c, idx) => `
         <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
-            <input type="text" class="form-input" placeholder="Название категории" value="${c.name || ''}" oninput="updateCustomCategory(${idx},'name',this.value)" style="flex:1;">
-            <input type="number" class="form-input" min="0" max="99" value="${c.count || 0}" oninput="updateCustomCategory(${idx},'count',this.value)" style="width:80px;">
-            <button type="button" class="btn-icon" onclick="removeCustomCategory(${idx})" title="Удалить">✕</button>
+            <input type="text" class="form-input" placeholder="Название категории" value="${c.name || ''}" oninput="updateCategoryRow(${idx},'name',this.value)" style="flex:1;">
+            <input type="number" class="form-input" min="0" max="99" value="${c.count || 0}" oninput="updateCategoryRow(${idx},'count',this.value)" style="width:90px;" placeholder="Кол-во">
+            <button type="button" class="btn-icon" onclick="removeCategoryRow(${idx})" title="Удалить категорию">✕</button>
         </div>
     `).join('');
 }
 
-// Init category inputs
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.category-input').forEach(i => i.addEventListener('input', updateTotalSku));
-});
+function addCategoryRow() {
+    categoryRows.push({ key: 'cust-' + Date.now() + '-' + categoryRows.length, name: '', count: 1 });
+    renderCategoriesList();
+    updateTotalSku();
+}
+
+function removeCategoryRow(idx) {
+    categoryRows.splice(idx, 1);
+    renderCategoriesList();
+    updateTotalSku();
+}
+
+function updateCategoryRow(idx, field, value) {
+    if (!categoryRows[idx]) return;
+    categoryRows[idx][field] = field === 'count' ? parseInt(value) || 0 : value;
+    if (field === 'count') updateTotalSku();
+}
+
+function updateTotalSku() {
+    const total = (categoryRows || []).reduce((s, c) => s + (parseInt(c.count) || 0), 0);
+    const el = document.getElementById('totalSku');
+    if (el) el.textContent = total;
+}
+
 
 // =============================================
 // MODE SELECTOR (Manual / Claude) - Step 2
@@ -650,19 +652,24 @@ function createCapsule() {
     let categories, totalItems;
     
     if (currentMode === 'manual') {
-        categories = {
-            jackets: parseInt(document.getElementById('catJackets').value || 0),
-            hoodies: parseInt(document.getElementById('catHoodies').value || 0),
-            pants: parseInt(document.getElementById('catPants').value || 0),
-            tshirts: parseInt(document.getElementById('catTshirts').value || 0),
-            accessories: parseInt(document.getElementById('catAccessories').value || 0),
-            shoes: parseInt(document.getElementById('catShoes').value || 0)
-        };
-        totalItems = Object.values(categories).reduce((a, b) => a + b, 0);
-        const customSum = (customCategories || []).reduce((s, c) => s + (parseInt(c.count) || 0), 0);
-        totalItems += customSum;
-
+        // Унифицированный список категорий: и стандартные, и пользовательские
+        const knownKeys = ['jackets','hoodies','pants','tshirts','accessories','shoes'];
+        categories = { jackets:0, hoodies:0, pants:0, tshirts:0, accessories:0, shoes:0 };
+        const customList = [];
+        (categoryRows || []).forEach(r => {
+            const cnt = parseInt(r.count) || 0;
+            if (cnt <= 0 || !r.name || !r.name.trim()) return;
+            if (knownKeys.includes(r.key)) {
+                categories[r.key] = cnt;
+            } else {
+                customList.push({ name: r.name.trim(), count: cnt });
+            }
+        });
+        totalItems = Object.values(categories).reduce((a, b) => a + b, 0)
+                   + customList.reduce((s, c) => s + c.count, 0);
         if (totalItems === 0) { showToast('Добавьте артикулы', 'error'); return; }
+        // прокидываем дальше через локальную переменную
+        window.__pendingCustomCategories = customList;
     } else {
         // Режим Claude - равномерное распределение по категориям
         const skuCount = parseInt(document.getElementById('claudeSkuCount').value);
@@ -724,7 +731,7 @@ function createCapsule() {
         gender: document.getElementById('capsuleGender').value,
         description: document.getElementById('capsuleDescription').value,
         categories,
-        customCategories: currentMode === 'manual' ? (customCategories || []).filter(c => c.name && c.count > 0) : [],
+        customCategories: currentMode === 'manual' ? (window.__pendingCustomCategories || []) : [],
         palette,
         paletteId, // Прямая ссылка на палитру из библиотеки
         priceSegment: document.getElementById('capsulePrice').value,
@@ -813,10 +820,10 @@ window.updateTotalPercent = updateTotalPercent;
 window.createCapsule = createCapsule;
 window.deleteCapsule = deleteCapsule;
 window.updateTotalSku = updateTotalSku;
-window.addCustomCategory = addCustomCategory;
-window.removeCustomCategory = removeCustomCategory;
-window.updateCustomCategory = updateCustomCategory;
-window.renderCustomCategories = renderCustomCategories;
+window.addCategoryRow = addCategoryRow;
+window.removeCategoryRow = removeCategoryRow;
+window.updateCategoryRow = updateCategoryRow;
+window.renderCategoriesList = renderCategoriesList;
 window.renderPaletteSelectGrid = renderPaletteSelectGrid;
 window.updateSelectedPalettePreview = updateSelectedPalettePreview;
 window.getColorsData = getColorsData;
