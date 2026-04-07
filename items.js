@@ -407,6 +407,38 @@ function generateItems(capsuleId) {
         shoes: 1
     };
 
+    // Свои категории, добавленные пользователем
+    (capsule.customCategories || []).forEach(cc => {
+        const count = parseInt(cc.count) || 0;
+        if (!count || !cc.name) return;
+        const slug = (cc.name || 'custom').toLowerCase().replace(/[^a-z0-9а-я]+/gi, '-').slice(0, 12) || 'custom';
+        const cprefix = (cc.name || 'CUS').replace(/[^A-Za-zА-Яа-я]/g, '').substring(0, 3).toUpperCase() || 'CUS';
+        for (let i = 0; i < count; i++) {
+            const base = bases[Math.floor(Math.random() * bases.length)] || defaultColors[0];
+            const accent = accents[Math.floor(Math.random() * accents.length)] || defaultColors[1];
+            items.push({
+                id: `${capsuleId}-${cprefix}-${String(num).padStart(3, '0')}`,
+                capsuleId,
+                sku: `${prefix}-${cprefix}-${String(num).padStart(3, '0')}`,
+                name: `${cc.name} ${capsule.name} ${i + 1}`,
+                category: 'custom-' + slug,
+                categoryLabel: cc.name,
+                status: 'brief',
+                baseColor: { name: base.name, code: base.code, hex: base.hex },
+                accentColor: { name: accent.name, code: accent.code, hex: accent.hex },
+                materials: 'смесовая ткань',
+                sizes: '104-152',
+                priceTarget: 1990,
+                prompt: '',
+                images: [],
+                comments: [],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            });
+            num++;
+        }
+    });
+
     Object.entries(categories).forEach(([cat, count]) => {
         for (let i = 0; i < count; i++) {
             const base = bases[Math.floor(Math.random() * bases.length)] || defaultColors[0];

@@ -141,6 +141,8 @@ function openNewCapsuleModal() {
     document.getElementById('capsuleGender').value = 'unisex';
     document.getElementById('capsuleDescription').value = '';
     document.querySelectorAll('.category-input').forEach(i => i.value = 0);
+    customCategories = [];
+    renderCustomCategories();
     updateTotalSku();
     // Сбрасываем палитру — пользователь добавляет цвета сам через пикер
     const colorsContainer = document.getElementById('colorsContainer');
@@ -196,9 +198,48 @@ function updateWizardUI() {
 }
 
 function updateTotalSku() {
-    const total = ['catJackets', 'catHoodies', 'catPants', 'catTshirts', 'catAccessories', 'catShoes']
+    const baseTotal = ['catJackets', 'catHoodies', 'catPants', 'catTshirts', 'catAccessories', 'catShoes']
         .reduce((sum, id) => sum + parseInt(document.getElementById(id).value || 0), 0);
-    document.getElementById('totalSku').textContent = total;
+    const customTotal = (customCategories || []).reduce((s, c) => s + (parseInt(c.count) || 0), 0);
+    document.getElementById('totalSku').textContent = baseTotal + customTotal;
+}
+
+// =============================================
+// CUSTOM CATEGORIES (manual mode)
+// =============================================
+let customCategories = [];
+
+function addCustomCategory() {
+    customCategories.push({ id: 'cust-' + Date.now() + '-' + customCategories.length, name: '', count: 1 });
+    renderCustomCategories();
+}
+
+function removeCustomCategory(idx) {
+    customCategories.splice(idx, 1);
+    renderCustomCategories();
+    updateTotalSku();
+}
+
+function updateCustomCategory(idx, field, value) {
+    if (!customCategories[idx]) return;
+    customCategories[idx][field] = field === 'count' ? parseInt(value) || 0 : value;
+    if (field === 'count') updateTotalSku();
+}
+
+function renderCustomCategories() {
+    const container = document.getElementById('customCategoriesList');
+    if (!container) return;
+    if (!customCategories.length) {
+        container.innerHTML = '<div style="color:var(--gray-500);font-size:13px;padding:8px 0;">Можно добавить любые свои категории — например «Платья», «Юбки», «Шорты»</div>';
+        return;
+    }
+    container.innerHTML = customCategories.map((c, idx) => `
+        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+            <input type="text" class="form-input" placeholder="Название категории" value="${c.name || ''}" oninput="updateCustomCategory(${idx},'name',this.value)" style="flex:1;">
+            <input type="number" class="form-input" min="0" max="99" value="${c.count || 0}" oninput="updateCustomCategory(${idx},'count',this.value)" style="width:80px;">
+            <button type="button" class="btn-icon" onclick="removeCustomCategory(${idx})" title="Удалить">✕</button>
+        </div>
+    `).join('');
 }
 
 // Init category inputs
@@ -618,7 +659,9 @@ function createCapsule() {
             shoes: parseInt(document.getElementById('catShoes').value || 0)
         };
         totalItems = Object.values(categories).reduce((a, b) => a + b, 0);
-        
+        const customSum = (customCategories || []).reduce((s, c) => s + (parseInt(c.count) || 0), 0);
+        totalItems += customSum;
+
         if (totalItems === 0) { showToast('Добавьте артикулы', 'error'); return; }
     } else {
         // Режим Claude - равномерное распределение по категориям
@@ -681,6 +724,7 @@ function createCapsule() {
         gender: document.getElementById('capsuleGender').value,
         description: document.getElementById('capsuleDescription').value,
         categories,
+        customCategories: currentMode === 'manual' ? (customCategories || []).filter(c => c.name && c.count > 0) : [],
         palette,
         paletteId, // Прямая ссылка на палитру из библиотеки
         priceSegment: document.getElementById('capsulePrice').value,
@@ -769,6 +813,10 @@ window.updateTotalPercent = updateTotalPercent;
 window.createCapsule = createCapsule;
 window.deleteCapsule = deleteCapsule;
 window.updateTotalSku = updateTotalSku;
+window.addCustomCategory = addCustomCategory;
+window.removeCustomCategory = removeCustomCategory;
+window.updateCustomCategory = updateCustomCategory;
+window.renderCustomCategories = renderCustomCategories;
 window.renderPaletteSelectGrid = renderPaletteSelectGrid;
 window.updateSelectedPalettePreview = updateSelectedPalettePreview;
 window.getColorsData = getColorsData;

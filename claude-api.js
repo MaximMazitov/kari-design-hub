@@ -372,7 +372,7 @@ ${paletteRules}
         const gptUser = `Создай описание для:
 
 АРТИКУЛ: ${item.name} (${item.sku || item.id || ''})
-КАТЕГОРИЯ: ${categoryNames[category]}
+КАТЕГОРИЯ: ${item.categoryLabel || categoryNames[category] || category}
 МОДЕЛЬ: ${modelInfo.modelPhrase}
 БАЗОВЫЙ ЦВЕТ: ${item.baseColor?.name || item.colors?.[0]?.name || 'серый'} (${item.baseColor?.code || item.colors?.[0]?.code || '17-4402 TCX'})
 АКЦЕНТ: ${item.accentColor?.name || item.colors?.[1]?.name || 'оранжевый'} (${item.accentColor?.code || item.colors?.[1]?.code || '16-1462 TCX'})
@@ -424,7 +424,7 @@ ${capsule.description}` : ''}`;
    - Принт/декор: embroidered patch on chest, heat-transfer logo, reflective piping, all-over print
 8. НЕ пиши абстрактно — описывай КОНКРЕТНО каждую деталь изделия. Промпт ~200-250 слов.
 
-ЭТАЛОННЫЙ ПРИМЕР для категории "${categoryNames[category]}":
+ЭТАЛОННЫЙ ПРИМЕР для категории "${item.categoryLabel || categoryNames[category] || category}":
 ${examplePrompt}
 ${paletteRules}
 
@@ -435,7 +435,7 @@ ${paletteRules}
     const userMessage = `Создай промпт для:
 
 АРТИКУЛ: ${item.name} (${item.sku || item.id || ''})
-КАТЕГОРИЯ: ${categoryNames[category]}
+КАТЕГОРИЯ: ${item.categoryLabel || categoryNames[category] || category}
 МОДЕЛЬ: ${modelInfo.modelPhrase}
 БАЗОВЫЙ ЦВЕТ: ${item.baseColor?.name || item.colors?.[0]?.name || 'серый'} (${item.baseColor?.code || item.colors?.[0]?.code || '17-4402 TCX'})
 АКЦЕНТ: ${item.accentColor?.name || item.colors?.[1]?.name || 'оранжевый'} (${item.accentColor?.code || item.colors?.[1]?.code || '16-1462 TCX'})
