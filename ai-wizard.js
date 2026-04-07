@@ -649,12 +649,59 @@ function renderStep3_Categories() {
                 }).join('')}
             </div>
 
+            <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--gray-200);">
+                <div style="font-weight:600;margin-bottom:8px;">➕ Свои категории</div>
+                <div id="wizardCustomCategoriesList"></div>
+                <button type="button" class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="wizardAddCustomCategory()">+ Добавить свою категорию</button>
+            </div>
+
             <div class="categories-total-bar">
                 <span>Всего артикулов:</span>
                 <span class="categories-total-value" id="categoriesTotalSku">${totalSku}</span>
             </div>
         </div>
     `;
+}
+
+function wizardGetCustomCategories() {
+    return (wizardState.selectedCategories || []).filter(c => String(c.id).startsWith('cust-'));
+}
+
+function wizardRenderCustomCategories() {
+    const container = document.getElementById('wizardCustomCategoriesList');
+    if (!container) return;
+    const list = wizardGetCustomCategories();
+    if (!list.length) {
+        container.innerHTML = '<div style="color:var(--gray-500);font-size:13px;padding:4px 0;">Например «Платья», «Юбки», «Пижамы»</div>';
+        return;
+    }
+    container.innerHTML = list.map(c => `
+        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+            <input type="text" class="form-input" placeholder="Название категории" value="${(c.label || '').replace(/"/g,'&quot;')}" oninput="wizardUpdateCustomCategory('${c.id}','label',this.value)" style="flex:1;">
+            <input type="number" class="form-input" min="0" max="99" value="${c.count || 0}" oninput="wizardUpdateCustomCategory('${c.id}','count',this.value)" style="width:90px;">
+            <button type="button" class="btn-icon" onclick="wizardRemoveCustomCategory('${c.id}')" title="Удалить">✕</button>
+        </div>
+    `).join('');
+}
+
+function wizardAddCustomCategory() {
+    const id = 'cust-' + Date.now() + '-' + (wizardState.selectedCategories || []).length;
+    wizardState.selectedCategories.push({ id, label: '', icon: '🏷️', count: 1 });
+    wizardRenderCustomCategories();
+    updateCategoriesTotalSku();
+}
+
+function wizardRemoveCustomCategory(id) {
+    wizardState.selectedCategories = wizardState.selectedCategories.filter(c => c.id !== id);
+    wizardRenderCustomCategories();
+    updateCategoriesTotalSku();
+}
+
+function wizardUpdateCustomCategory(id, field, value) {
+    const cat = wizardState.selectedCategories.find(c => c.id === id);
+    if (!cat) return;
+    cat[field] = field === 'count' ? (parseInt(value) || 0) : value;
+    if (field === 'count') updateCategoriesTotalSku();
 }
 
 function toggleCategory(id, label, icon, checked) {
@@ -1148,6 +1195,9 @@ function wizardGoToStep(step) {
     wizardState.step = step;
     wizardState.isGenerating = false;
     renderWizardModal();
+    if (step === 3 && typeof wizardRenderCustomCategories === 'function') {
+        setTimeout(wizardRenderCustomCategories, 0);
+    }
 }
 
 function validateWizardStep() {
@@ -1304,8 +1354,15 @@ async function saveGeneratedCapsule() {
     // Create capsule
     // Преобразовать selectedCategories → categories для совместимости с items.js generateItems()
     const categoriesObj = {};
+    const customCatsList = [];
     (wizardState.selectedCategories || []).forEach(cat => {
-        categoriesObj[cat.id] = cat.count || 1;
+        if (String(cat.id).startsWith('cust-')) {
+            if (cat.label && cat.label.trim() && (cat.count || 0) > 0) {
+                customCatsList.push({ name: cat.label.trim(), count: cat.count || 1 });
+            }
+        } else {
+            categoriesObj[cat.id] = cat.count || 1;
+        }
     });
 
     const capsule = {
@@ -1321,6 +1378,7 @@ async function saveGeneratedCapsule() {
         bestsellerImage: wizardState.bestseller.imageBase64,
         bestsellerAnalysis: wizardState.analysis,
         categories: categoriesObj,
+        customCategories: customCatsList,
         selectedCategories: wizardState.selectedCategories,
         looks: data.looks || [],
         palette: data.palette || [],
@@ -1459,6 +1517,10 @@ window.saveGeneratedCapsule = saveGeneratedCapsule;
 window.toggleCategory = toggleCategory;
 window.changeCategoryCount = changeCategoryCount;
 window.rerunImageAnalysis = rerunImageAnalysis;
+window.wizardAddCustomCategory = wizardAddCustomCategory;
+window.wizardRemoveCustomCategory = wizardRemoveCustomCategory;
+window.wizardUpdateCustomCategory = wizardUpdateCustomCategory;
+window.wizardRenderCustomCategories = wizardRenderCustomCategories;
 window.editGeneratedCapsule = () => { showToast('Редактирование в разработке', 'info'); };
 
 console.log('[AI Wizard] v10.0 loaded (6-step flow)');
