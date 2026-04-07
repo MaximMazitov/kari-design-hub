@@ -68,7 +68,7 @@ function renderPantonePickerList(query) {
     const count = pantonePickerModal.querySelector('#pantonePickerCount');
     count.textContent = `Найдено: ${matches.length} из ${(window.PANTONE_TCX || []).length}`;
 
-    const visible = matches.slice(0, 200);
+    const visible = matches;
     list.innerHTML = visible.map((c, i) => `
         <div class="pantone-pick-item" data-idx="${i}"
              style="display:flex;align-items:center;gap:12px;padding:10px 22px;cursor:pointer;border-bottom:1px solid #f5f5f5;">
@@ -79,7 +79,7 @@ function renderPantonePickerList(query) {
             </div>
             <div style="font-size:11px;color:#aaa;font-family:monospace;">${c.hex}</div>
         </div>
-    `).join('') + (matches.length > 200 ? `<div style="padding:14px 22px;text-align:center;color:#aaa;font-size:12px;">Показано первые 200. Уточните поиск.</div>` : '');
+    `).join('');
 
     list.querySelectorAll('.pantone-pick-item').forEach((el, i) => {
         el.addEventListener('mouseenter', () => el.style.background = '#fdf6ec');
