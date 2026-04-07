@@ -529,48 +529,7 @@
                             <label class="form-label">🎨 Цвета капсулы (Pantone TCX)</label>
                             <p style="font-size: 12px; color: var(--gray-500); margin-bottom: 12px;">Добавьте цвета и укажите % распределения</p>
                             
-                            <div id="colorsContainer">
-                                <div class="color-row">
-                                    <input type="text" class="form-input color-input" placeholder="19-4005 TCX" value="19-4005 TCX" style="width: 140px;">
-                                    <input type="text" class="form-input" placeholder="Название" value="Чёрный" style="width: 120px;">
-                                    <input type="color" class="color-picker" value="#1A1A1A" style="width: 50px; height: 42px; padding: 2px; cursor: pointer;">
-                                    <input type="number" class="form-input percent-input" value="30" min="0" max="100" style="width: 70px;" oninput="updateTotalPercent()">
-                                    <span style="color: var(--gray-500);">%</span>
-                                    <button class="btn-icon" onclick="removeColor(this)" title="Удалить">✕</button>
-                                </div>
-                                <div class="color-row">
-                                    <input type="text" class="form-input color-input" placeholder="19-4005 TCX" value="19-3906 TCX" style="width: 140px;">
-                                    <input type="text" class="form-input" placeholder="Название" value="Графитовый" style="width: 120px;">
-                                    <input type="color" class="color-picker" value="#4A4A4A" style="width: 50px; height: 42px; padding: 2px; cursor: pointer;">
-                                    <input type="number" class="form-input percent-input" value="25" min="0" max="100" style="width: 70px;" oninput="updateTotalPercent()">
-                                    <span style="color: var(--gray-500);">%</span>
-                                    <button class="btn-icon" onclick="removeColor(this)" title="Удалить">✕</button>
-                                </div>
-                                <div class="color-row">
-                                    <input type="text" class="form-input color-input" placeholder="19-4005 TCX" value="17-4402 TCX" style="width: 140px;">
-                                    <input type="text" class="form-input" placeholder="Название" value="Серый меланж" style="width: 120px;">
-                                    <input type="color" class="color-picker" value="#9A9A9A" style="width: 50px; height: 42px; padding: 2px; cursor: pointer;">
-                                    <input type="number" class="form-input percent-input" value="25" min="0" max="100" style="width: 70px;" oninput="updateTotalPercent()">
-                                    <span style="color: var(--gray-500);">%</span>
-                                    <button class="btn-icon" onclick="removeColor(this)" title="Удалить">✕</button>
-                                </div>
-                                <div class="color-row">
-                                    <input type="text" class="form-input color-input" placeholder="19-4005 TCX" value="16-1462 TCX" style="width: 140px;">
-                                    <input type="text" class="form-input" placeholder="Название" value="Оранжевый" style="width: 120px;">
-                                    <input type="color" class="color-picker" value="#E8601C" style="width: 50px; height: 42px; padding: 2px; cursor: pointer;">
-                                    <input type="number" class="form-input percent-input" value="15" min="0" max="100" style="width: 70px;" oninput="updateTotalPercent()">
-                                    <span style="color: var(--gray-500);">%</span>
-                                    <button class="btn-icon" onclick="removeColor(this)" title="Удалить">✕</button>
-                                </div>
-                                <div class="color-row">
-                                    <input type="text" class="form-input color-input" placeholder="19-4005 TCX" value="13-0550 TCX" style="width: 140px;">
-                                    <input type="text" class="form-input" placeholder="Название" value="Лаймовый" style="width: 120px;">
-                                    <input type="color" class="color-picker" value="#C8E020" style="width: 50px; height: 42px; padding: 2px; cursor: pointer;">
-                                    <input type="number" class="form-input percent-input" value="5" min="0" max="100" style="width: 70px;" oninput="updateTotalPercent()">
-                                    <span style="color: var(--gray-500);">%</span>
-                                    <button class="btn-icon" onclick="removeColor(this)" title="Удалить">✕</button>
-                                </div>
-                            </div>
+                            <div id="colorsContainer"></div>
                             
                             <button class="btn btn-secondary" onclick="addColor()" style="margin-top: 12px; width: 100%;">
                                 + Добавить цвет

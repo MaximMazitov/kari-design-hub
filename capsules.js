@@ -142,6 +142,10 @@ function openNewCapsuleModal() {
     document.getElementById('capsuleDescription').value = '';
     document.querySelectorAll('.category-input').forEach(i => i.value = 0);
     updateTotalSku();
+    // Сбрасываем палитру — пользователь добавляет цвета сам через пикер
+    const colorsContainer = document.getElementById('colorsContainer');
+    if (colorsContainer) colorsContainer.innerHTML = '';
+    updateTotalPercent();
     
     // КРИТИЧНО: Инициализируем область загрузки референса после открытия модалки
     setTimeout(initRefUploadArea, 100);
@@ -560,13 +564,8 @@ function addColor() {
 
 function removeColor(btn) {
     const row = btn.closest('.color-row');
-    const container = document.getElementById('colorsContainer');
-    if (container.children.length > 1) {
-        row.remove();
-        updateTotalPercent();
-    } else {
-        showToast('Нужен хотя бы один цвет', 'error');
-    }
+    row.remove();
+    updateTotalPercent();
 }
 
 function updateTotalPercent() {
