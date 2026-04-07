@@ -286,10 +286,21 @@ function getModelAge(capsule) {
 // ГЕНЕРАЦИЯ ПРОМПТА ДЛЯ АРТИКУЛА (улучшенная v3)
 // =============================================
 async function generatePromptWithClaude(item, capsule) {
-    // Получаем палитру
-    const palettes = typeof loadPalettes === 'function' ? loadPalettes() : [];
-    const palette = capsule?.paletteId ? palettes.find(p => p.id === capsule.paletteId) : null;
-    
+    // Получаем палитру — поддерживаем 3 источника:
+    // 1) capsule.palette.colors (manual mode — добавлено вручную)
+    // 2) capsule.paletteId → библиотека палитр
+    // 3) AI Wizard: capsule.palette как массив
+    let resolvedColors = [];
+    if (Array.isArray(capsule?.palette)) {
+        resolvedColors = capsule.palette;
+    } else if (capsule?.palette?.mode === 'manual' && Array.isArray(capsule.palette.colors)) {
+        resolvedColors = capsule.palette.colors;
+    } else if (capsule?.paletteId) {
+        const palettes = typeof loadPalettes === 'function' ? loadPalettes() : [];
+        const lib = palettes.find(p => p.id === capsule.paletteId);
+        if (lib && Array.isArray(lib.colors)) resolvedColors = lib.colors;
+    }
+
     // Определяем параметры модели (ребёнок / взрослый)
     const modelInfo = getModelInfo(capsule);
     const modelAge = modelInfo.age;
@@ -299,13 +310,29 @@ async function generatePromptWithClaude(item, capsule) {
     // Получаем эталонный пример для категории — детский или взрослый
     const examplesSet = modelInfo.type === 'adult' ? ADULT_PROMPT_EXAMPLES : PROMPT_EXAMPLES;
     const examplePrompt = examplesSet[category] || examplesSet.tshirts;
-    
-    // Контекст палитры (компактный)
+
+    // Контекст палитры — с процентами распределения
     let paletteContext = '';
-    if (palette && palette.colors) {
-        paletteContext = palette.colors.slice(0, 5).map(c => 
-            `${c.name} (${c.code})`
-        ).join(', ');
+    let paletteRules = '';
+    if (resolvedColors.length) {
+        // Сортируем по убыванию процента — главные цвета первыми
+        const sorted = [...resolvedColors].sort((a, b) => (b.percent || 0) - (a.percent || 0));
+        paletteContext = sorted.map(c => {
+            const pct = c.percent ? ` — ${c.percent}%` : '';
+            return `${c.name || ''} (${c.code || ''})${pct}`.trim();
+        }).join('; ');
+
+        const dominant = sorted[0];
+        const accents = sorted.slice(1, 3);
+        paletteRules = `\n\nПАЛИТРА КАПСУЛЫ (с распределением по процентам — обязательно использовать ВСЕ цвета пропорционально):
+${sorted.map(c => `  • ${c.code || '?'} — ${c.name || ''} (${c.percent || 0}% площади изделия)`).join('\n')}
+
+⚠️ ПРАВИЛА ИСПОЛЬЗОВАНИЯ ПАЛИТРЫ:
+- Доминирующий цвет (${dominant?.code} — ${dominant?.percent || 0}%) = основной материал/корпус изделия
+${accents.length ? '- Акцентные цвета (' + accents.map(c => `${c.code} — ${c.percent || 0}%`).join(', ') + ') = детали: вставки, нашивки, манжеты, фурнитура, кант, принт' : ''}
+- В описании цвета ОБЯЗАТЕЛЬНО указывай Pantone TCX коды как они даны выше
+- Не добавляй цветов, которых нет в палитре
+- Соблюдай пропорции: чем больше % — тем больше площади занимает цвет`;
     }
 
     const categoryNames = {
@@ -350,6 +377,7 @@ async function generatePromptWithClaude(item, capsule) {
 
 ЭТАЛОННЫЙ ПРИМЕР для категории "${categoryNames[category]}":
 ${examplePrompt}
+${paletteRules}
 
 Создай промпт ТОЧНО в таком же формате и с такой же детализацией одежды.`;
 
@@ -366,7 +394,7 @@ ${examplePrompt}
 ${item.features?.length ? 'ДЕТАЛИ ИЗДЕЛИЯ: ' + item.features.join(', ') : ''}
 ${item.description ? 'ОПИСАНИЕ: ' + item.description : ''}
 КОЛЛЕКЦИЯ: ${capsule?.name || 'KARI'} (${capsule?.season || 'AW26'})
-${paletteContext ? 'ПАЛИТРА: ' + paletteContext : ''}${capsuleDesc ? `
+${paletteContext ? 'ПАЛИТРА КАПСУЛЫ (с %): ' + paletteContext : ''}${capsuleDesc ? `
 
 КОНЦЕПЦИЯ КОЛЛЕКЦИИ:
 ${capsuleDesc}
