@@ -516,9 +516,15 @@ async function generatePromptsForCapsule(capsuleId) {
         return;
     }
     
-    const confirmed = confirm(`Сгенерировать промпты для ${itemsToGenerate.length} артикулов?\n\nЭто займёт около ${Math.ceil(itemsToGenerate.length * 3 / 60)} минут.`);
-    if (!confirmed) return;
+    showConfirmDialog({
+        title: 'Массовая генерация промптов',
+        message: `Сгенерировать промпты для ${itemsToGenerate.length} артикулов?\nЭто займёт около ${Math.ceil(itemsToGenerate.length * 3 / 60)} минут.`,
+        confirmText: 'Запустить',
+        onConfirm: () => doBulkGeneratePrompts(itemsToGenerate, capsuleId)
+    });
+}
 
+async function doBulkGeneratePrompts(itemsToGenerate, capsuleId) {
     // Показываем индикатор загрузки
     if (typeof showLoading === 'function') {
         showLoading(`Генерация промптов: 0/${itemsToGenerate.length}`);

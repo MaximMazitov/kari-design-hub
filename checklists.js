@@ -636,12 +636,18 @@ function saveChecklistFromEditor() {
 }
 
 function deleteChecklistConfirm(id) {
-    if (confirm('Удалить этот чек-лист?')) {
-        deleteChecklist(id);
-        closeItemModal();
-        renderChecklistsPage();
-        showToast('Чек-лист удалён', 'success');
-    }
+    showConfirmDialog({
+        title: 'Удалить чек-лист?',
+        message: 'Этот чек-лист будет удалён безвозвратно.',
+        confirmText: '🗑️ Удалить',
+        danger: true,
+        onConfirm: () => {
+            deleteChecklist(id);
+            closeItemModal();
+            renderChecklistsPage();
+            showToast('Чек-лист удалён', 'success');
+        }
+    });
 }
 
 // =============================================

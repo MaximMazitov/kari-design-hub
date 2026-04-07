@@ -953,11 +953,17 @@ async function handleItemImageUpload(event) {
 }
 
 function removeItemImage() {
-    if (!confirm('Удалить изображение?')) return;
-    
-    updateItem(currentCapsuleId, currentItemId, { images: [] });
-    openItemModal(currentItemId);
-    showToast('Изображение удалено', 'success');
+    showConfirmDialog({
+        title: 'Удалить изображение?',
+        message: 'Изображение будет удалено из артикула.',
+        confirmText: '🗑️ Удалить',
+        danger: true,
+        onConfirm: () => {
+            updateItem(currentCapsuleId, currentItemId, { images: [] });
+            openItemModal(currentItemId);
+            showToast('Изображение удалено', 'success');
+        }
+    });
 }
 
 // =============================================

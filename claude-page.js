@@ -118,15 +118,20 @@ function copyReportById(reportId) {
 
 // Удалить отчёт
 function deleteReport(reportId) {
-    if (!confirm('Удалить этот отчёт?')) return;
-    
-    let reports = loadAnalysisReports();
-    reports = reports.filter(r => r.id !== reportId);
-    localStorage.setItem('kari-claude-reports', JSON.stringify(reports));
-    
-    renderReportsHistory();
-    updateClaudeStats();
-    showToast('Отчёт удалён', 'success');
+    showConfirmDialog({
+        title: 'Удалить отчёт?',
+        message: 'Этот отчёт будет удалён безвозвратно.',
+        confirmText: '🗑️ Удалить',
+        danger: true,
+        onConfirm: () => {
+            let reports = loadAnalysisReports();
+            reports = reports.filter(r => r.id !== reportId);
+            localStorage.setItem('kari-claude-reports', JSON.stringify(reports));
+            renderReportsHistory();
+            updateClaudeStats();
+            showToast('Отчёт удалён', 'success');
+        }
+    });
 }
 
 // Модалка выбора капсулы для анализа

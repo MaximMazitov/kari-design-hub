@@ -9,6 +9,32 @@ window.STORAGE_KEY = STORAGE_KEY;
 window.ITEMS_STORAGE_KEY = ITEMS_STORAGE_KEY;
 
 // =============================================
+// In-app confirm dialog (replaces native confirm)
+// =============================================
+function showConfirmDialog({ title = 'Подтверждение', message = '', confirmText = 'OK', cancelText = 'Отмена', danger = false, onConfirm, onCancel }) {
+    const existing = document.getElementById('appConfirmOverlay');
+    if (existing) existing.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'appConfirmOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2147483646;display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML = `
+        <div style="background:#fff;border-radius:16px;max-width:460px;width:90%;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <h3 style="margin:0 0 12px;font-size:20px;font-weight:700;color:#1a1a1a;">${title}</h3>
+            <p style="margin:0 0 24px;color:#555;line-height:1.5;white-space:pre-line;">${message}</p>
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button id="appConfirmCancel" class="btn btn-secondary">${cancelText}</button>
+                <button id="appConfirmOk" class="btn btn-primary" style="${danger ? 'background:#dc2626;border-color:#dc2626;' : ''}">${confirmText}</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+    const close = () => overlay.remove();
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) { close(); onCancel && onCancel(); } });
+    overlay.querySelector('#appConfirmCancel').onclick = () => { close(); onCancel && onCancel(); };
+    overlay.querySelector('#appConfirmOk').onclick = () => { close(); onConfirm && onConfirm(); };
+}
+window.showConfirmDialog = showConfirmDialog;
+
+// =============================================
 // DEMO DATA
 // =============================================
 const demoCapsules = [
@@ -1181,10 +1207,15 @@ function handleImportFile(event) {
     const mergeMode = document.querySelector('input[name="importMode"]:checked')?.value === 'merge';
 
     if (!mergeMode) {
-        if (!confirm('Все текущие данные будут заменены. Продолжить?')) {
-            event.target.value = '';
-            return;
-        }
+        showConfirmDialog({
+            title: 'Заменить все данные?',
+            message: 'Все текущие данные будут заменены данными из импортируемого файла.',
+            confirmText: 'Заменить',
+            danger: true,
+            onConfirm: () => { importData(file, mergeMode); },
+            onCancel: () => { event.target.value = ''; }
+        });
+        return;
     }
 
     importData(file, mergeMode);
@@ -1195,9 +1226,24 @@ function handleImportFile(event) {
  * Подтверждение очистки данных
  */
 function confirmClearAllData() {
-    if (!confirm('Вы уверены? Все данные будут удалены безвозвратно!')) return;
-    if (!confirm('Это последнее предупреждение! Удалить ВСЕ данные?')) return;
+    showConfirmDialog({
+        title: 'Удалить все данные?',
+        message: 'Все капсулы, артикулы, палитры, промпты и изображения будут удалены безвозвратно!',
+        confirmText: 'Далее',
+        danger: true,
+        onConfirm: () => {
+            showConfirmDialog({
+                title: 'Последнее предупреждение',
+                message: 'Точно удалить ВСЕ данные? Это действие необратимо.',
+                confirmText: '🗑️ Удалить всё',
+                danger: true,
+                onConfirm: () => doClearAllData()
+            });
+        }
+    });
+}
 
+function doClearAllData() {
     try {
         showLoading('Очистка данных...');
 

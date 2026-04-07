@@ -675,12 +675,18 @@ function savePromptFromEditor() {
 }
 
 function deletePromptConfirm(id) {
-    if (confirm('Удалить этот шаблон?')) {
-        deletePrompt(id);
-        closeItemModal();
-        renderPromptsPage();
-        showToast('Шаблон удалён', 'success');
-    }
+    showConfirmDialog({
+        title: 'Удалить шаблон?',
+        message: 'Этот шаблон промпта будет удалён безвозвратно.',
+        confirmText: '🗑️ Удалить',
+        danger: true,
+        onConfirm: () => {
+            deletePrompt(id);
+            closeItemModal();
+            renderPromptsPage();
+            showToast('Шаблон удалён', 'success');
+        }
+    });
 }
 
 // =============================================

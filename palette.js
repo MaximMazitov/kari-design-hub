@@ -527,22 +527,31 @@ function savePaletteFromEditor() {
     const name = document.getElementById('paletteName').value.trim();
     const season = document.getElementById('paletteSeason').value;
     const description = document.getElementById('paletteDescription').value.trim();
-    
+
     if (!name) {
         showToast('Введите название палитры', 'error');
         return;
     }
-    
+
     if (editingPaletteColors.length === 0) {
         showToast('Добавьте хотя бы один цвет', 'error');
         return;
     }
-    
+
     const total = editingPaletteColors.reduce((s, c) => s + (c.percent || 0), 0);
     if (total !== 100) {
-        if (!confirm(`Сумма процентов = ${total}%. Продолжить?`)) return;
+        showConfirmDialog({
+            title: 'Сумма процентов не равна 100%',
+            message: `Текущая сумма: ${total}%. Сохранить палитру в таком виде?`,
+            confirmText: 'Сохранить',
+            onConfirm: () => doSavePalette(name, season, description)
+        });
+        return;
     }
-    
+    doSavePalette(name, season, description);
+}
+
+function doSavePalette(name, season, description) {
     const paletteData = {
         name,
         season,
@@ -583,27 +592,6 @@ function deletePaletteConfirm(id) {
     });
 }
 
-function showConfirmDialog({ title, message, confirmText = 'OK', cancelText = 'Отмена', danger = false, onConfirm }) {
-    const existing = document.getElementById('appConfirmOverlay');
-    if (existing) existing.remove();
-    const overlay = document.createElement('div');
-    overlay.id = 'appConfirmOverlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2147483646;display:flex;align-items:center;justify-content:center;';
-    overlay.innerHTML = `
-        <div style="background:#fff;border-radius:16px;max-width:440px;width:90%;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-            <h3 style="margin:0 0 12px;font-size:20px;font-weight:700;color:#1a1a1a;">${title}</h3>
-            <p style="margin:0 0 24px;color:#555;line-height:1.5;">${message}</p>
-            <div style="display:flex;gap:10px;justify-content:flex-end;">
-                <button id="appConfirmCancel" class="btn btn-secondary">${cancelText}</button>
-                <button id="appConfirmOk" class="btn btn-primary" style="${danger ? 'background:#dc2626;border-color:#dc2626;' : ''}">${confirmText}</button>
-            </div>
-        </div>`;
-    document.body.appendChild(overlay);
-    const close = () => overlay.remove();
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
-    overlay.querySelector('#appConfirmCancel').onclick = close;
-    overlay.querySelector('#appConfirmOk').onclick = () => { close(); onConfirm && onConfirm(); };
-}
 
 // =============================================
 // ACTIONS
@@ -681,7 +669,6 @@ window.removePaletteColor = removePaletteColor;
 window.updatePaletteTotal = updatePaletteTotal;
 window.savePaletteFromEditor = savePaletteFromEditor;
 window.deletePaletteConfirm = deletePaletteConfirm;
-window.showConfirmDialog = showConfirmDialog;
 window.duplicatePalette = duplicatePalette;
 window.setAsDefault = setAsDefault;
 window.exportPalette = exportPalette;

@@ -720,31 +720,32 @@ function createCapsule() {
 // DELETE CAPSULE
 // =============================================
 function deleteCapsule(capsuleId, capsuleName) {
-    if (!confirm(`Удалить капсулу "${capsuleName}"?\n\nВсе артикулы этой капсулы также будут удалены!`)) {
-        return;
-    }
-    
-    // Удаляем капсулу
-    let capsules = loadCapsules();
-    capsules = capsules.filter(c => c.id !== capsuleId);
-    saveCapsules(capsules);
-    
-    // Удаляем артикулы этой капсулы
-    const allItems = JSON.parse(localStorage.getItem(ITEMS_STORAGE_KEY) || '{}');
-    delete allItems[capsuleId];
-    localStorage.setItem(ITEMS_STORAGE_KEY, JSON.stringify(allItems));
-    
-    // Синхронизируем с Firebase если доступен
-    if (typeof syncToCloud === 'function') {
-        syncToCloud().then(() => {
-            console.log('[Capsules] Удаление синхронизировано с Firebase');
-        }).catch(err => {
-            console.warn('[Capsules] Ошибка синхронизации удаления:', err);
-        });
-    }
-    
-    renderCapsules();
-    showToast(`Капсула "${capsuleName}" удалена`, 'success');
+    showConfirmDialog({
+        title: 'Удалить капсулу?',
+        message: `Капсула «${capsuleName}» и все её артикулы будут удалены безвозвратно.`,
+        confirmText: '🗑️ Удалить',
+        danger: true,
+        onConfirm: () => {
+            let capsules = loadCapsules();
+            capsules = capsules.filter(c => c.id !== capsuleId);
+            saveCapsules(capsules);
+
+            const allItems = JSON.parse(localStorage.getItem(ITEMS_STORAGE_KEY) || '{}');
+            delete allItems[capsuleId];
+            localStorage.setItem(ITEMS_STORAGE_KEY, JSON.stringify(allItems));
+
+            if (typeof syncToCloud === 'function') {
+                syncToCloud().then(() => {
+                    console.log('[Capsules] Удаление синхронизировано с Firebase');
+                }).catch(err => {
+                    console.warn('[Capsules] Ошибка синхронизации удаления:', err);
+                });
+            }
+
+            renderCapsules();
+            showToast(`Капсула "${capsuleName}" удалена`, 'success');
+        }
+    });
 }
 
 // =============================================
