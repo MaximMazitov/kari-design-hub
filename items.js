@@ -862,6 +862,14 @@ function openItemModal(itemId) {
                 <div class="item-detail-section">
                     <div class="item-detail-label">Промпт для AI</div>
                     <textarea class="prompt-textarea" id="editPrompt">${item.prompt || ''}</textarea>
+                    <div style="display:flex;gap:16px;margin-top:8px;align-items:center;font-size:13px;">
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                            <input type="radio" name="promptTarget" value="midjourney" ${(item.promptTarget || 'midjourney') === 'midjourney' ? 'checked' : ''}> 🎨 Midjourney
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                            <input type="radio" name="promptTarget" value="gpt" ${item.promptTarget === 'gpt' ? 'checked' : ''}> 💬 GPT (ChatGPT/DALL·E)
+                        </label>
+                    </div>
                     <div style="display:flex;gap:8px;margin-top:8px;">
                         <button class="btn btn-secondary" onclick="copyPrompt()">📋 Копировать</button>
                         <button class="btn btn-primary" id="generatePromptBtn" onclick="generatePromptForCurrentItem()">
@@ -1046,7 +1054,9 @@ async function generatePromptForCurrentItem() {
             return;
         }
         
-        const prompt = await generatePromptWithClaude(item, capsule);
+        const targetEl = document.querySelector('input[name="promptTarget"]:checked');
+        const target = targetEl ? targetEl.value : 'midjourney';
+        const prompt = await generatePromptWithClaude(item, capsule, target);
         
         if (prompt) {
             document.getElementById('editPrompt').value = prompt;

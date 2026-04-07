@@ -285,7 +285,7 @@ function getModelAge(capsule) {
 // =============================================
 // ГЕНЕРАЦИЯ ПРОМПТА ДЛЯ АРТИКУЛА (улучшенная v3)
 // =============================================
-async function generatePromptWithClaude(item, capsule) {
+async function generatePromptWithClaude(item, capsule, target = 'midjourney') {
     // Получаем палитру — поддерживаем 3 источника:
     // 1) capsule.palette.colors (manual mode — добавлено вручную)
     // 2) capsule.paletteId → библиотека палитр
@@ -347,6 +347,55 @@ ${accents.length ? '- Акцентные цвета (' + accents.map(c => `${c.c
     const audienceLabel = modelInfo.type === 'adult'
         ? (modelInfo.gender === 'woman' ? 'женской одежды' : 'мужской одежды')
         : 'детской одежды';
+
+    if (target === 'gpt') {
+        const gptSystem = `Ты генератор промптов для ChatGPT/DALL·E. Создаёшь подробные текстовые описания для ${audienceLabel} KARI на английском языке.
+
+КОНТЕКСТ: ${KARI_CONTEXT}
+
+ТИП МОДЕЛИ: ${modelInfo.type === 'adult' ? 'взрослая (' + modelInfo.gender + ', ' + modelInfo.age + ' лет)' : 'детская (' + modelInfo.gender + ', ' + modelInfo.age + ' лет)'}
+
+ПРАВИЛА:
+1. Пиши естественным языком, развернутыми предложениями (НЕ через запятую как для Midjourney).
+2. НЕ добавляй параметры --ar / --v / --style — они только для Midjourney.
+3. Начни описание с указания модели: "${modelInfo.modelPhrase}, fully clothed, photographed in a commercial studio setting, safe content."
+4. Опиши изделие подробно: силуэт, посадка, застёжка, карманы, воротник/капюшон, манжеты, фурнитура, принт/декор, материал и финиш ткани (5-7 деталей).
+5. Обязательно укажи Pantone TCX коды цветов в формате XX-XXXX TCX и распиши, на каких частях изделия они используются.
+6. Опиши позу, освещение (soft studio light), фон (neutral seamless backdrop) естественной прозой.
+7. НЕ описывай тело/кожу/внешность — только одежду и общую сцену.
+8. Объём: 180-260 слов в виде связного абзаца (1-3 параграфа).
+${capsule?.description ? '9. Учитывай концепцию коллекции — она ПРИОРИТЕТНА для стилистики и настроения.' : ''}
+${paletteRules}
+
+Верни ТОЛЬКО готовое описание на английском, без преамбулы и пояснений.`;
+
+        const gptUser = `Создай описание для:
+
+АРТИКУЛ: ${item.name} (${item.sku || item.id || ''})
+КАТЕГОРИЯ: ${categoryNames[category]}
+МОДЕЛЬ: ${modelInfo.modelPhrase}
+БАЗОВЫЙ ЦВЕТ: ${item.baseColor?.name || item.colors?.[0]?.name || 'серый'} (${item.baseColor?.code || item.colors?.[0]?.code || '17-4402 TCX'})
+АКЦЕНТ: ${item.accentColor?.name || item.colors?.[1]?.name || 'оранжевый'} (${item.accentColor?.code || item.colors?.[1]?.code || '16-1462 TCX'})
+МАТЕРИАЛ: ${item.materials || 'смесовая ткань'}
+${item.features?.length ? 'ДЕТАЛИ ИЗДЕЛИЯ: ' + item.features.join(', ') : ''}
+${item.description ? 'ОПИСАНИЕ: ' + item.description : ''}
+КОЛЛЕКЦИЯ: ${capsule?.name || 'KARI'} (${capsule?.season || 'AW26'})
+${paletteContext ? 'ПАЛИТРА КАПСУЛЫ (с %): ' + paletteContext : ''}${capsule?.description ? `
+
+КОНЦЕПЦИЯ КОЛЛЕКЦИИ:
+${capsule.description}` : ''}`;
+
+        const gptResult = await callClaudeAPI(gptSystem, gptUser, 900);
+        if (gptResult.success) {
+            let p = gptResult.content.trim();
+            p = p.replace(/^["'`]|["'`]$/g, '');
+            p = p.replace(/```[\s\S]*?```/g, '').trim();
+            p = p.replace(/\s*--ar[^\s]*\s*--v[^\s]*(\s*--style\s*\w+)?/gi, '').trim();
+            return p;
+        } else {
+            throw new Error(gptResult.error || 'Ошибка генерации');
+        }
+    }
 
     const systemPrompt = `Ты генератор промптов для Midjourney. Создаёшь промпты для ${audienceLabel} KARI.
 
