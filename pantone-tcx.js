@@ -48,9 +48,9 @@ function pantoneSearch(query) {
     ).slice(0, 80);
 }
 
-function showPantoneDropdown(input) {
+function showPantoneDropdown(input, useValue) {
     const dd = ensurePantoneDropdown();
-    const matches = pantoneSearch(input.value);
+    const matches = pantoneSearch(useValue ? input.value : '');
     if (!matches.length) {
         dd.style.display = 'none';
         return;
@@ -98,12 +98,12 @@ function showPantoneDropdown(input) {
 
 document.addEventListener('focusin', (e) => {
     if (e.target.classList && e.target.classList.contains('color-input')) {
-        showPantoneDropdown(e.target);
+        showPantoneDropdown(e.target, false); // show all on focus
     }
 });
 document.addEventListener('input', (e) => {
     if (e.target.classList && e.target.classList.contains('color-input')) {
-        showPantoneDropdown(e.target);
+        showPantoneDropdown(e.target, true); // filter while typing
     }
 });
 
