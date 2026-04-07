@@ -392,7 +392,7 @@ function openEditPaletteModal(id) {
 }
 
 function showPaletteEditor(palette) {
-    const seasons = ['SS25', 'AW25', 'SS26', 'AW26', 'SS27', 'AW27'];
+    const seasons = ['SS25','AW25','SS26','AW26','SS27','AW27','SS28','AW28','SS29','AW29','SS30','AW30'];
     
     document.getElementById('itemModalTitle').textContent = editingPaletteId ? '✏️ Редактировать палитру' : '✨ Новая палитра';
     document.getElementById('itemModalBody').innerHTML = `

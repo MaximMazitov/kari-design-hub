@@ -728,10 +728,18 @@ function renderStep4_Params() {
                     <label class="form-label">Сезон</label>
                     <select class="form-select" id="wizCollectionSeason"
                             onchange="wizardState.collection.season = this.value">
-                        <option value="AW26" ${c.season === 'AW26' ? 'selected' : ''}>AW26 (Осень-Зима)</option>
-                        <option value="SS26" ${c.season === 'SS26' ? 'selected' : ''}>SS26 (Весна-Лето)</option>
-                        <option value="AW25" ${c.season === 'AW25' ? 'selected' : ''}>AW25 (Осень-Зима)</option>
                         <option value="SS25" ${c.season === 'SS25' ? 'selected' : ''}>SS25 (Весна-Лето)</option>
+                        <option value="AW25" ${c.season === 'AW25' ? 'selected' : ''}>AW25 (Осень-Зима)</option>
+                        <option value="SS26" ${c.season === 'SS26' ? 'selected' : ''}>SS26 (Весна-Лето)</option>
+                        <option value="AW26" ${c.season === 'AW26' ? 'selected' : ''}>AW26 (Осень-Зима)</option>
+                        <option value="SS27" ${c.season === 'SS27' ? 'selected' : ''}>SS27 (Весна-Лето)</option>
+                        <option value="AW27" ${c.season === 'AW27' ? 'selected' : ''}>AW27 (Осень-Зима)</option>
+                        <option value="SS28" ${c.season === 'SS28' ? 'selected' : ''}>SS28 (Весна-Лето)</option>
+                        <option value="AW28" ${c.season === 'AW28' ? 'selected' : ''}>AW28 (Осень-Зима)</option>
+                        <option value="SS29" ${c.season === 'SS29' ? 'selected' : ''}>SS29 (Весна-Лето)</option>
+                        <option value="AW29" ${c.season === 'AW29' ? 'selected' : ''}>AW29 (Осень-Зима)</option>
+                        <option value="SS30" ${c.season === 'SS30' ? 'selected' : ''}>SS30 (Весна-Лето)</option>
+                        <option value="AW30" ${c.season === 'AW30' ? 'selected' : ''}>AW30 (Осень-Зима)</option>
                     </select>
                 </div>
 
