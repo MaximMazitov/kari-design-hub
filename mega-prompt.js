@@ -1201,8 +1201,8 @@ function parseAICapsuleResponse(responseText) {
         parsed.items.forEach((item, index) => {
             if (item.prompt) {
                 const prompt = item.prompt.toLowerCase();
-                if (!prompt.includes('professional child model')) {
-                    safetyIssues.push(`Item ${index + 1}: missing "professional child model"`);
+                if (!prompt.includes('professional child model') && !prompt.includes('professional adult')) {
+                    safetyIssues.push(`Item ${index + 1}: missing "professional child/adult model"`);
                 }
                 if (!prompt.includes('fully clothed')) {
                     safetyIssues.push(`Item ${index + 1}: missing "fully clothed"`);

@@ -18,10 +18,52 @@ let apiCallCount = 0;
 // ОБЯЗАТЕЛЬНЫЕ SAFETY MARKERS (для валидации)
 // =============================================
 const REQUIRED_SAFETY_MARKERS = [
-    'professional child model',
     'fully clothed',
     'safe content'
 ];
+
+// =============================================
+// ОПРЕДЕЛЕНИЕ ТИПА МОДЕЛИ (ребёнок / взрослый)
+// =============================================
+function getModelInfo(capsule) {
+    // Поддерживаем оба поля: targetGroup (ручное создание) и ageGroup (AI Wizard)
+    const target = (capsule?.targetGroup || capsule?.ageGroup || '').toLowerCase();
+    const isWomen = target === 'women' || target === 'female';
+    const isMen = target === 'men' || target === 'male';
+
+    if (isWomen) {
+        return {
+            type: 'adult',
+            modelPhrase: 'Professional adult female fashion model, 25-year-old woman',
+            gender: 'woman',
+            age: 25,
+            styleRef: 'Zara Woman aesthetic, contemporary womenswear catalog'
+        };
+    }
+    if (isMen) {
+        return {
+            type: 'adult',
+            modelPhrase: 'Professional adult male fashion model, 27-year-old man',
+            gender: 'man',
+            age: 27,
+            styleRef: 'Zara Man aesthetic, contemporary menswear catalog'
+        };
+    }
+
+    // По умолчанию — ребёнок
+    const age = getModelAge(capsule);
+    const g = capsule?.gender;
+    const childGender = (g === 'boys' || g === 'male') ? 'boy'
+                      : (g === 'girls' || g === 'female') ? 'girl'
+                      : 'child';
+    return {
+        type: 'child',
+        modelPhrase: `Professional child model, ${age}-year-old ${childGender}`,
+        gender: childGender,
+        age: age,
+        styleRef: 'Zara Kids aesthetic, H&M Kids'
+    };
+}
 
 // =============================================
 // КОМПАКТНАЯ БАЗА ЗНАНИЙ KARI (оптимизированная)
@@ -47,6 +89,16 @@ const PROMPT_EXAMPLES = {
     accessories: `Professional child model, 10-year-old boy, fully clothed, commercial studio photography, safe content. Standing straight, looking at camera with confident expression. Wearing casual outfit with focus on structured six-panel baseball cap in cotton twill (19-4005 TCX Jet Black), pre-curved brim with contrast stitching, adjustable plastic snap-back closure, ventilation eyelets on crown panels. Electric blue (18-4252 TCX Princess Blue) embroidered logo on front panel, matching woven flag label on side. Also wearing matching polyester backpack with padded straps, main compartment zip, front zip pocket. Clean light gray studio backdrop, even professional lighting. Full body shot showing accessories clearly, 4K resolution. --ar 3:4 --v 6 --style raw`,
 
     shoes: `Professional child model, 9-year-old girl, fully clothed, commercial studio photography, safe content. Dynamic pose showing shoes clearly, one foot slightly forward, cheerful expression. Wearing low-top sneakers in smooth synthetic leather upper (11-0601 TCX Bright White), chunky EVA platform sole, double hook-and-loop strap closure, padded collar and tongue, breathable mesh side panels. Mint green (13-5714 TCX Cabbage) accent on sole edge, heel tab pull loop, and strap logo detail. Perforated toe box, rubber toe cap, cushioned insole. Clean white studio backdrop, lighting emphasizing shoe details. Full body shot with clear shoe visibility, 4K resolution, sporty kids style. --ar 3:4 --v 6 --style raw`
+};
+
+// FEW-SHOT для ВЗРОСЛЫХ моделей (женщины/мужчины)
+const ADULT_PROMPT_EXAMPLES = {
+    jackets: `Professional adult male fashion model, 27-year-old man, fully clothed, commercial studio photography, safe content. Standing confidently, hands in pockets, neutral confident expression. Wearing oversized boxy bomber jacket in matte polyester twill shell (19-4005 TCX Jet Black), full-zip closure with branded metal pull, ribbed stand collar, two side welt pockets with snap closure, one sleeve zip pocket. Olive green (18-0316 TCX Olive Branch) accent on zip tape and embroidered sleeve patch. Ribbed cuffs and hem, clean topstitching, lightweight quilted lining visible at cuff. Clean light gray studio backdrop, soft diffused professional lighting, high-end menswear catalog style. Full body shot, 4K resolution, Zara Man aesthetic. --ar 3:4 --v 6 --style raw`,
+    hoodies: `Professional adult female fashion model, 25-year-old woman, fully clothed, commercial studio photography, safe content. Relaxed pose, hand in pocket, calm confident expression. Wearing oversized drop-shoulder pullover hoodie in brushed cotton-blend fleece (17-4402 TCX Neutral Gray), peach-touch inside finish, lined hood with flat woven drawcord, front kangaroo pocket, ribbed cuffs and banded hem. Coral pink (16-1546 TCX Living Coral) accent on drawcord tips and small embroidered logo on chest. Tonal topstitching on shoulder seams, longline hip cut. Clean white studio backdrop, bright editorial lighting. Full body shot, 4K resolution, contemporary womenswear catalog. --ar 3:4 --v 6 --style raw`,
+    pants: `Professional adult male fashion model, 27-year-old man, fully clothed, commercial studio photography, safe content. Casual standing pose, hands relaxed at sides. Wearing slim tapered jogger pants in brushed stretch cotton twill (19-4026 TCX Dress Blues), elastic waistband with flat woven drawstring, two deep side pockets, one back welt pocket with snap closure, ribbed ankle cuffs. Vermillion orange (16-1462 TCX) accent on side seam stripe and woven label at back waistband. Contrast topstitching on outseam. Clean light gray studio backdrop, professional studio lighting. Full body shot, 4K resolution, Zara Man aesthetic. --ar 3:4 --v 6 --style raw`,
+    tshirts: `Professional adult female fashion model, 25-year-old woman, fully clothed, commercial studio photography, safe content. Natural pose, arms relaxed, soft confident expression. Wearing regular-fit crew neck t-shirt in soft combed cotton-blend jersey (11-0601 TCX Bright White), ribbed round neckline with taped seam inside, short set-in sleeves, straight bottom hem with side vents. Powder pink (14-1318 TCX) screen-printed graphic on center chest, small woven brand label at lower hem. Smooth matte fabric finish, gentle drape. Clean white studio backdrop, soft natural lighting, minimalist editorial style. Full body shot, 4K resolution. --ar 3:4 --v 6 --style raw`,
+    accessories: `Professional adult male fashion model, 27-year-old man, fully clothed, commercial studio photography, safe content. Standing straight, looking at camera, confident expression. Wearing structured six-panel baseball cap in cotton twill (19-4005 TCX Jet Black), pre-curved brim with contrast stitching, adjustable metal snap-back closure, ventilation eyelets. Princess blue (18-4252 TCX) embroidered logo on front panel. Also wearing matching polyester backpack with padded straps, main compartment zip, front zip pocket. Clean light gray studio backdrop, even professional lighting. Full body shot, 4K resolution, contemporary menswear catalog. --ar 3:4 --v 6 --style raw`,
+    shoes: `Professional adult female fashion model, 25-year-old woman, fully clothed, commercial studio photography, safe content. Dynamic pose showing shoes clearly, one foot slightly forward. Wearing low-top sneakers in smooth synthetic leather upper (11-0601 TCX Bright White), chunky EVA platform sole, lace-up closure, padded collar and tongue, breathable mesh side panels. Cabbage green (13-5714 TCX) accent on sole edge and heel tab pull loop. Perforated toe box, rubber toe cap, cushioned insole. Clean white studio backdrop, lighting emphasizing shoe details. Full body shot with clear shoe visibility, 4K resolution, contemporary womenswear catalog. --ar 3:4 --v 6 --style raw`
 };
 
 // =============================================
@@ -179,29 +231,28 @@ function validatePrompt(prompt) {
 // =============================================
 function fixPrompt(prompt, item, capsule) {
     let fixed = prompt;
-    
-    // Добавляем safety markers если отсутствуют
-    if (!fixed.toLowerCase().includes('professional child model')) {
-        fixed = 'Professional child model, ' + fixed;
+    const info = getModelInfo(capsule);
+    const modelRegex = info.type === 'adult'
+        ? /professional adult (?:female|male) fashion model[^,]*,\s*\d{1,2}-year-old (?:woman|man),?\s*/i
+        : /professional child model[^,]*,?\s*(?:\d{1,2}-year-old (?:boy|girl|child),?\s*)?/i;
+
+    // Если в промпте нет нужного описания модели — подставляем
+    if (!modelRegex.test(fixed)) {
+        // Удаляем любое старое упоминание модели (детское или взрослое)
+        fixed = fixed.replace(/professional (?:child|adult (?:female|male) fashion) model[^.]*?\d{1,2}-year-old (?:boy|girl|child|woman|man),?\s*/i, '');
+        fixed = `${info.modelPhrase}, ` + fixed.replace(/^\s*/, '');
     }
-    
+
     if (!fixed.toLowerCase().includes('fully clothed')) {
-        fixed = fixed.replace(/professional child model,?\s*/i, 'Professional child model, fully clothed, ');
+        fixed = fixed.replace(new RegExp(`(${info.gender}),?\\s*`, 'i'), `$1, fully clothed, `);
     }
-    
+
     if (!fixed.toLowerCase().includes('safe content')) {
         fixed = fixed.replace(/fully clothed,?\s*/i, 'fully clothed, safe content, ');
     }
-    
+
     if (!fixed.toLowerCase().includes('commercial studio photography')) {
         fixed = fixed.replace(/safe content,?\s*/i, 'safe content, commercial studio photography. ');
-    }
-    
-    // Добавляем возраст если отсутствует
-    if (!/\d{1,2}-year-old/.test(fixed)) {
-        const age = getModelAge(capsule);
-        const gender = capsule?.gender === 'boys' ? 'boy' : capsule?.gender === 'girls' ? 'girl' : 'child';
-        fixed = fixed.replace(/professional child model,?\s*/i, `Professional child model, ${age}-year-old ${gender}, `);
     }
     
     // Добавляем Midjourney параметры если отсутствуют
@@ -239,13 +290,15 @@ async function generatePromptWithClaude(item, capsule) {
     const palettes = typeof loadPalettes === 'function' ? loadPalettes() : [];
     const palette = capsule?.paletteId ? palettes.find(p => p.id === capsule.paletteId) : null;
     
-    // Определяем параметры
-    const modelAge = getModelAge(capsule);
-    const gender = capsule?.gender === 'boys' ? 'boy' : capsule?.gender === 'girls' ? 'girl' : 'child';
+    // Определяем параметры модели (ребёнок / взрослый)
+    const modelInfo = getModelInfo(capsule);
+    const modelAge = modelInfo.age;
+    const gender = modelInfo.gender;
     const category = item.category || 'tshirts';
-    
-    // Получаем эталонный пример для категории
-    const examplePrompt = PROMPT_EXAMPLES[category] || PROMPT_EXAMPLES.tshirts;
+
+    // Получаем эталонный пример для категории — детский или взрослый
+    const examplesSet = modelInfo.type === 'adult' ? ADULT_PROMPT_EXAMPLES : PROMPT_EXAMPLES;
+    const examplePrompt = examplesSet[category] || examplesSet.tshirts;
     
     // Контекст палитры (компактный)
     let paletteContext = '';
@@ -264,12 +317,19 @@ async function generatePromptWithClaude(item, capsule) {
         shoes: 'обувь/кроссовки'
     };
 
-    const systemPrompt = `Ты генератор промптов для Midjourney. Создаёшь промпты для детской одежды KARI.
+    const audienceLabel = modelInfo.type === 'adult'
+        ? (modelInfo.gender === 'woman' ? 'женской одежды' : 'мужской одежды')
+        : 'детской одежды';
+
+    const systemPrompt = `Ты генератор промптов для Midjourney. Создаёшь промпты для ${audienceLabel} KARI.
 
 КОНТЕКСТ: ${KARI_CONTEXT}
 
+ТИП МОДЕЛИ: ${modelInfo.type === 'adult' ? 'ВЗРОСЛАЯ модель (' + modelInfo.gender + ', ' + modelInfo.age + ' лет)' : 'ДЕТСКАЯ модель (' + modelInfo.gender + ', ' + modelInfo.age + ' лет)'}
+СТИЛЬ-РЕФЕРЕНС: ${modelInfo.styleRef}
+
 КРИТИЧЕСКИЕ ПРАВИЛА:
-1. ВСЕГДА начинай с: "Professional child model, {возраст}-year-old {boy/girl}, fully clothed, commercial studio photography, safe content"
+1. ВСЕГДА начинай с: "${modelInfo.modelPhrase}, fully clothed, commercial studio photography, safe content"
 2. ВСЕГДА указывай Pantone TCX коды цветов в формате XX-XXXX TCX
 3. ВСЕГДА заканчивай: --ar 3:4 --v 6 --style raw
 4. НИКОГДА не описывай кожу, тело, внешность кроме одежды
@@ -299,7 +359,7 @@ ${examplePrompt}
 
 АРТИКУЛ: ${item.name} (${item.sku || item.id || ''})
 КАТЕГОРИЯ: ${categoryNames[category]}
-МОДЕЛЬ: ${modelAge}-year-old ${gender}
+МОДЕЛЬ: ${modelInfo.modelPhrase}
 БАЗОВЫЙ ЦВЕТ: ${item.baseColor?.name || item.colors?.[0]?.name || 'серый'} (${item.baseColor?.code || item.colors?.[0]?.code || '17-4402 TCX'})
 АКЦЕНТ: ${item.accentColor?.name || item.colors?.[1]?.name || 'оранжевый'} (${item.accentColor?.code || item.colors?.[1]?.code || '16-1462 TCX'})
 МАТЕРИАЛ: ${item.materials || 'смесовая ткань'}
