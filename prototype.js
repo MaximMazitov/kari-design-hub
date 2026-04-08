@@ -567,8 +567,45 @@ function protoSaveAsCapsule() {
     };
     capsules.push(newCapsule);
     localStorage.setItem('kari-capsules', JSON.stringify(capsules));
+
+    // Создаём артикулы с уже готовыми промптами → чтобы вкладка «Артикулы» не предлагала регенерацию
+    const allItems = JSON.parse(localStorage.getItem('kari-items') || '{}');
+    const prefix = (protoState.theme || 'CAP').substring(0,3).toUpperCase();
+    const counters = {};
+    const items = protoState.skus.map((s, idx) => {
+        const catKey = s.category || 'item';
+        counters[catKey] = (counters[catKey]||0) + 1;
+        const cprefix = catKey.replace(/[^A-Za-zА-Яа-я]/g,'').substring(0,3).toUpperCase() || 'ITM';
+        const firstColor = (s.colors && s.colors[0]) || (protoState.palette[0]) || {name:'',code:'',hex:'#ccc'};
+        const accentColor = (s.colors && s.colors[1]) || (protoState.palette[1]) || firstColor;
+        return {
+            id: `${newCapsule.id}-${cprefix}-${String(idx+1).padStart(3,'0')}`,
+            capsuleId: newCapsule.id,
+            sku: `${prefix}-${cprefix}-${String(idx+1).padStart(3,'0')}`,
+            name: s.name || `${s.category} ${idx+1}`,
+            category: catKey,
+            categoryLabel: s.category,
+            status: s.prompt ? 'generation' : 'brief',
+            baseColor: { name: firstColor.name||'', code: firstColor.code||'', hex: firstColor.hex||'#ccc' },
+            accentColor: { name: accentColor.name||'', code: accentColor.code||'', hex: accentColor.hex||'#ccc' },
+            materials: 'смесовая ткань',
+            sizes: '',
+            priceTarget: 0,
+            prompt: s.prompt || '',
+            promptTarget: s.target || protoState.globalTarget,
+            prototypeUrl: s.prototypeUrl || null,
+            prototypeAnalysis: s.editedAnalysis || s.analysis || null,
+            images: [],
+            comments: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+    });
+    allItems[newCapsule.id] = items;
+    localStorage.setItem('kari-items', JSON.stringify(allItems));
+
     if (typeof syncToCloud === 'function') syncToCloud();
-    if (typeof showToast === 'function') showToast('✅ Сохранено как капсула', 'success');
+    if (typeof showToast === 'function') showToast(`✅ Капсула сохранена (${items.length} артикулов с промптами)`, 'success');
 }
 
 // =============================================
