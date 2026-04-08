@@ -991,6 +991,15 @@ async function generatePromptFromPrototype({ capsule, sku, prototypeAnalysis, ta
 - Настроение: ${capsule.mood || ''}
 - Категории: ${catsLine}
 
+РАЗВЁРНУТОЕ ОПИСАНИЕ КОНЦЕПЦИИ:
+${capsule.description || '—'}
+
+${capsule.anchorPrompt ? `ЭТАЛОННЫЙ ПРОМПТ (ОБЯЗАТЕЛЬНО сохранить из него стиль съёмки, свет, фон, тип модели — все изделия капсулы должны выглядеть как вариации этого образца):
+"""
+${capsule.anchorPrompt}
+"""
+` : ''}
+
 ПАЛИТРА PANTONE TCX (обязательно использовать коды):
 ${colorsLine}
 

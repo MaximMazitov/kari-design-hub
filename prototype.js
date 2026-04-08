@@ -7,10 +7,14 @@ let protoState = {
     season: 'SS25',
     audience: '',
     mood: '',
-    palette: [],      // [{code, name, percent}]
-    categories: [],   // [{key, name, count}]
-    skus: [],         // [{id, category, name, prototypeUrl, prototypePath, analysis, editedAnalysis, colors:[], prompt, target}]
-    globalTarget: 'midjourney' // midjourney | gpt | banana
+    description: '',  // развёрнутое описание концепции
+    palette: [],
+    categories: [],
+    anchorCategory: '',   // категория для эталонного образца
+    anchorPrompt: '',     // сгенерированный эталон
+    anchorApproved: false,
+    skus: [],
+    globalTarget: 'midjourney'
 };
 
 const PROTO_STORAGE_KEY = 'kari-prototype-state';
@@ -85,6 +89,10 @@ function renderPrototypeWizard() {
                     <input type="text" id="protoMood" placeholder="минимализм, техничные ткани" value="${escapeHtml(protoState.mood)}">
                 </div>
             </div>
+            <div class="proto-field" style="margin-top:16px">
+                <label>Развёрнутое описание капсулы (концепция, нарратив, ключевые идеи, материалы, силуэты, референсы)</label>
+                <textarea id="protoDescription" style="min-height:140px" placeholder="Например: Капсула вдохновлена японским уличным стилем и техничной спортивной одеждой 90-х. Ключевые материалы — плотный футер с начёсом, нейлон рипстоп, софтшелл. Силуэты оверсайз с опущенной линией плеча. Акцент на функциональных карманах, кулисках и светоотражающих деталях. Настроение — городская свобода и минимализм.">${escapeHtml(protoState.description)}</textarea>
+            </div>
         </div>
 
         <!-- ШАГ 2: ПАЛИТРА -->
@@ -102,15 +110,46 @@ function renderPrototypeWizard() {
             <button class="proto-btn proto-btn-primary" style="float:right" onclick="protoGenerateSkus()">Создать SKU →</button>
         </div>
 
-        <!-- ШАГ 4: SKU + ПРОТОТИПЫ -->
+        <!-- ШАГ 4: ЭТАЛОННЫЙ ОБРАЗЕЦ -->
         <div class="proto-section">
-            <h3><span class="proto-step-num">4</span> SKU и прототипы <span style="font-size:13px; color:#6b7280; font-weight:normal;">(загрузи фото прототипа для каждого SKU — AI проанализирует крой)</span></h3>
+            <h3><span class="proto-step-num">4</span> Эталонный образец <span style="font-size:13px; color:#6b7280; font-weight:normal;">(первое изделие задаст визуальный стиль всей капсулы)</span></h3>
+            <div class="proto-field">
+                <label>Выбери категорию для эталона</label>
+                <select id="protoAnchorCat" onchange="protoState.anchorCategory=this.value;saveProtoState()">
+                    <option value="">— выбери —</option>
+                    ${protoState.categories.map(c=>`<option ${protoState.anchorCategory===c.name?'selected':''}>${escapeHtml(c.name)}</option>`).join('')}
+                </select>
+            </div>
+            <div class="proto-field" style="margin-top:12px">
+                <label>AI для эталона</label>
+                <div style="display:flex;gap:16px">
+                    <label><input type="radio" name="protoAnchorTarget" value="midjourney" ${(protoState.globalTarget||'midjourney')==='midjourney'?'checked':''}> 🎨 Midjourney</label>
+                    <label><input type="radio" name="protoAnchorTarget" value="gpt" ${protoState.globalTarget==='gpt'?'checked':''}> 💬 GPT/DALL·E</label>
+                    <label><input type="radio" name="protoAnchorTarget" value="banana" ${protoState.globalTarget==='banana'?'checked':''}> 🍌 Nano Banana</label>
+                </div>
+            </div>
+            <button class="proto-btn proto-btn-primary" style="margin-top:12px" onclick="protoGenerateAnchor()">⚡ Сгенерировать эталон</button>
+            ${protoState.anchorPrompt ? `
+                <div class="proto-field" style="margin-top:16px">
+                    <label>Эталонный промпт (можешь отредактировать)</label>
+                    <textarea id="protoAnchorPrompt" style="min-height:140px" onchange="protoState.anchorPrompt=this.value;saveProtoState()">${escapeHtml(protoState.anchorPrompt)}</textarea>
+                </div>
+                <button class="proto-btn proto-btn-secondary" onclick="protoGenerateAnchor()">🔄 Перегенерить</button>
+                <button class="proto-btn ${protoState.anchorApproved?'proto-btn-secondary':'proto-btn-primary'}" onclick="protoState.anchorApproved=!protoState.anchorApproved;saveProtoState();renderPrototypeWizard()" style="margin-left:8px">
+                    ${protoState.anchorApproved?'✅ Эталон утверждён':'Утвердить эталон →'}
+                </button>
+            ` : ''}
+        </div>
+
+        <!-- ШАГ 5: SKU + ПРОТОТИПЫ -->
+        <div class="proto-section">
+            <h3><span class="proto-step-num">5</span> SKU и прототипы <span style="font-size:13px; color:#6b7280; font-weight:normal;">(загрузи фото прототипа для каждого SKU — AI проанализирует крой)</span></h3>
             <div id="protoSkuList"></div>
         </div>
 
-        <!-- ШАГ 5: ГЕНЕРАЦИЯ -->
+        <!-- ШАГ 6: ГЕНЕРАЦИЯ -->
         <div class="proto-section">
-            <h3><span class="proto-step-num">5</span> Генерация финальных промптов</h3>
+            <h3><span class="proto-step-num">6</span> Генерация финальных промптов</h3>
             <div class="proto-target-selector">
                 <strong>Для какого AI генерить:</strong>
                 <label><input type="radio" name="protoTarget" value="midjourney" ${protoState.globalTarget==='midjourney'?'checked':''} onchange="protoState.globalTarget=this.value;saveProtoState()"> 🎨 Midjourney</label>
@@ -124,15 +163,20 @@ function renderPrototypeWizard() {
     `;
 
     // Attach onchange for top fields
-    ['protoTheme','protoSeason','protoAudience','protoMood'].forEach(id => {
+    ['protoTheme','protoSeason','protoAudience','protoMood','protoDescription'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', () => {
             protoState.theme = document.getElementById('protoTheme').value;
             protoState.season = document.getElementById('protoSeason').value;
             protoState.audience = document.getElementById('protoAudience').value;
             protoState.mood = document.getElementById('protoMood').value;
+            protoState.description = document.getElementById('protoDescription').value;
             saveProtoState();
         });
+    });
+    // anchor target radios
+    document.querySelectorAll('input[name="protoAnchorTarget"]').forEach(r => {
+        r.addEventListener('change', () => { protoState.globalTarget = r.value; saveProtoState(); });
     });
 
     renderProtoPalette();
@@ -374,6 +418,8 @@ async function protoGenerateAllPrompts() {
         season: protoState.season,
         audience: protoState.audience,
         mood: protoState.mood,
+        description: protoState.description,
+        anchorPrompt: protoState.anchorPrompt,
         palette: protoState.palette,
         categories: protoState.categories
     };
@@ -420,6 +466,65 @@ async function protoRegenerateOne(skuId) {
         saveProtoState();
         renderProtoSkus();
         if (typeof showToast === 'function') showToast('✅ Готово', 'success');
+    }
+}
+
+// =============================================
+// ГЕНЕРАЦИЯ ЭТАЛОНА
+// =============================================
+async function protoGenerateAnchor() {
+    if (!protoState.anchorCategory) { alert('Выбери категорию для эталона'); return; }
+    if (!protoState.palette.length) { alert('Добавь хотя бы один цвет в палитру'); return; }
+    if (typeof callClaudeAPI !== 'function') { alert('Claude API не загружен'); return; }
+
+    const target = protoState.globalTarget || 'midjourney';
+    const targetName = target === 'gpt' ? 'ChatGPT / DALL·E' : target === 'banana' ? 'Google Nano Banana (Gemini)' : 'Midjourney';
+    const colorsLine = protoState.palette.map(c => `${c.name||c.code} (${c.code}) — ${c.percent||0}%`).join(', ');
+
+    let formatInstruction;
+    if (target === 'midjourney') {
+        formatInstruction = 'Формат: английский, через запятые, в конце --ar 3:4 --v 6 --style raw. 60-120 слов.';
+    } else if (target === 'gpt') {
+        formatInstruction = 'Формат: развёрнутое английское описание естественным языком. Без MJ-параметров. 80-150 слов.';
+    } else {
+        formatInstruction = 'Формат: структурированные блоки на английском (garment, fabric, colors, construction, styling, photography). 80-150 слов.';
+    }
+
+    const system = `Ты fashion prompt-engineer. Создаёшь эталонный промпт, который задаст визуальный стиль всей капсульной коллекции: свет, фон, тип модели, стиль съёмки.`;
+    const user = `КАПСУЛА:
+- Тема: ${protoState.theme}
+- Сезон: ${protoState.season}
+- Аудитория: ${protoState.audience}
+- Настроение: ${protoState.mood}
+
+РАЗВЁРНУТОЕ ОПИСАНИЕ:
+${protoState.description || '—'}
+
+ПАЛИТРА PANTONE TCX:
+${colorsLine}
+
+ЭТАЛОННОЕ ИЗДЕЛИЕ: ${protoState.anchorCategory}
+
+ЗАДАЧА:
+Создай промпт для ${targetName} для первого изделия капсулы — категория "${protoState.anchorCategory}". Этот промпт станет ЭТАЛОНОМ визуального стиля: определит свет, фон, модель, стиль съёмки для всей коллекции.
+Обязательно:
+1. Укажи Pantone TCX коды с процентами
+2. Опиши стиль съёмки чётко (studio / natural light / background / model type) — он должен быть повторяем
+3. Отрази настроение и материалы из описания капсулы
+${formatInstruction}
+
+Верни ТОЛЬКО текст промпта.`;
+
+    if (typeof showToast === 'function') showToast('⚡ Генерация эталона...', 'info');
+    const res = await callClaudeAPI(system, user, 1200);
+    if (res.success) {
+        protoState.anchorPrompt = res.content.trim();
+        protoState.anchorApproved = false;
+        saveProtoState();
+        renderPrototypeWizard();
+        if (typeof showToast === 'function') showToast('✅ Эталон сгенерирован', 'success');
+    } else {
+        if (typeof showToast === 'function') showToast('❌ ' + res.error, 'error');
     }
 }
 
@@ -492,3 +597,4 @@ window.protoExportJson = protoExportJson;
 window.protoSaveAsCapsule = protoSaveAsCapsule;
 window.protoState = protoState;
 window.saveProtoState = saveProtoState;
+window.protoGenerateAnchor = protoGenerateAnchor;
