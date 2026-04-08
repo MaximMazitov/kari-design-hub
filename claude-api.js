@@ -885,6 +885,139 @@ async function testClaudeConnection() {
 // =============================================
 // ЭКСПОРТ ФУНКЦИЙ
 // =============================================
+// =============================================
+// CLAUDE VISION — анализ прототипа изделия
+// =============================================
+async function callClaudeVision(systemPrompt, userText, imageUrl, maxTokens = 1500) {
+    updateApiStatus('loading');
+    apiCallCount++;
+    try {
+        // Загружаем картинку и конвертируем в base64 (Anthropic принимает base64 или url; через proxy удобнее base64)
+        const imgResp = await fetch(imageUrl);
+        const blob = await imgResp.blob();
+        const mediaType = blob.type || 'image/jpeg';
+        const base64 = await new Promise((resolve, reject) => {
+            const r = new FileReader();
+            r.onloadend = () => resolve(r.result.split(',')[1]);
+            r.onerror = reject;
+            r.readAsDataURL(blob);
+        });
+
+        const response = await fetch(CLAUDE_PROXY_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'claude-sonnet-4-20250514',
+                max_tokens: maxTokens,
+                system: systemPrompt,
+                messages: [{
+                    role: 'user',
+                    content: [
+                        { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+                        { type: 'text', text: userText }
+                    ]
+                }]
+            })
+        });
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.error?.message || `HTTP ${response.status}`);
+        }
+        const data = await response.json();
+        if (data.error) throw new Error(data.error.message);
+        updateApiStatus('success');
+        return { success: true, content: data.content[0].text };
+    } catch (error) {
+        console.error('[Claude Vision] Ошибка:', error);
+        updateApiStatus('error', error.message);
+        return { success: false, error: error.message };
+    }
+}
+
+// Анализ прототипа изделия по картинке -> структурированное описание
+async function analyzePrototypeImage(imageUrl) {
+    const system = `Ты профессиональный fashion-дизайнер и технолог одежды. Проанализируй изделие на фотографии и верни ТОЛЬКО JSON без markdown-обёрток и пояснений. Используй русский язык в значениях.`;
+    const user = `Проанализируй это изделие одежды и верни JSON со следующей структурой:
+{
+  "type": "тип изделия (худи, свитшот, куртка, футболка и т.д.)",
+  "fit": "крой (оверсайз / regular / slim / relaxed)",
+  "length": "длина (кроп / стандарт / удлинённая / макси)",
+  "silhouette": "силуэт (прямой / A-line / приталенный / свободный)",
+  "neckline": "горловина/ворот (капюшон / круглый / V-образный / стойка / поло)",
+  "sleeves": "рукава (длинные / короткие / 3/4 / реглан / втачные / спущенное плечо)",
+  "cuffs": "манжеты (рифлёные / прямые / на резинке / отсутствуют)",
+  "hem": "низ изделия (рифлёная резинка / прямой / кулиска / асимметрия)",
+  "pockets": "карманы (кенгуру / накладные / прорезные / отсутствуют / количество и расположение)",
+  "closure": "застёжка (молния / кнопки / пуговицы / без застёжки / шнуровка)",
+  "hood": "капюшон (двухслойный с кулиской / простой / отсутствует)",
+  "material_guess": "предполагаемый материал (футер, флис, твил, деним, нейлон и т.д.)",
+  "details": "особые детали (нашивки, швы, люверсы, принты, вышивка и т.д.)",
+  "construction_notes": "конструктивные особенности важные для повторения кроя"
+}
+Будь максимально точным и конкретным — это описание будет использовано для генерации промптов другим изделиям в этом же крое.`;
+    const result = await callClaudeVision(system, user, imageUrl, 1500);
+    if (!result.success) return result;
+    // Парсим JSON
+    let txt = result.content.trim();
+    txt = txt.replace(/^```json\s*/i, '').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
+    try {
+        const parsed = JSON.parse(txt);
+        return { success: true, analysis: parsed, raw: txt };
+    } catch (e) {
+        return { success: false, error: 'Не удалось распарсить JSON: ' + e.message, raw: txt };
+    }
+}
+
+// Генерация финального промпта по SKU с учётом анализа прототипа
+async function generatePromptFromPrototype({ capsule, sku, prototypeAnalysis, target }) {
+    const targetName = target === 'gpt' ? 'ChatGPT / DALL·E' : target === 'banana' ? 'Google Nano Banana (Gemini)' : 'Midjourney';
+    const colorsLine = (capsule.palette || []).map(c => `${c.name || c.code} (${c.code}) — ${c.percent || ''}%`).join(', ');
+    const catsLine = (capsule.categories || []).map(c => `${c.name}×${c.count}`).join(', ');
+
+    let formatInstruction;
+    if (target === 'midjourney') {
+        formatInstruction = `Формат: английский, через запятые, параметры Midjourney в конце (--ar 3:4 --v 6 --style raw). Длина 60-120 слов.`;
+    } else if (target === 'gpt') {
+        formatInstruction = `Формат: развёрнутое описательное предложение на английском естественным языком для ChatGPT/DALL·E. Без Midjourney-параметров. Длина 80-150 слов.`;
+    } else {
+        formatInstruction = `Формат: структурированное описание на английском для Google Nano Banana / Gemini. Чёткие блоки: garment, fabric, colors, construction details, styling, photography. Длина 80-150 слов.`;
+    }
+
+    const system = `Ты fashion-designer и prompt-engineer. Генерируй промпты для ${targetName} для AI-генерации изделий одежды. Всегда включай Pantone TCX коды и процентное распределение цветов.`;
+    const user = `КАПСУЛЬНАЯ КОЛЛЕКЦИЯ:
+- Тема: ${capsule.theme || capsule.name}
+- Сезон: ${capsule.season || ''}
+- Аудитория: ${capsule.audience || ''}
+- Настроение: ${capsule.mood || ''}
+- Категории: ${catsLine}
+
+ПАЛИТРА PANTONE TCX (обязательно использовать коды):
+${colorsLine}
+
+ПРОТОТИП ИЗДЕЛИЯ (результат AI-анализа фото — ОБЯЗАТЕЛЬНО сохранить ВСЕ конструктивные детали):
+${JSON.stringify(prototypeAnalysis, null, 2)}
+
+ТЕКУЩЕЕ SKU:
+- Категория: ${sku.category}
+- Название: ${sku.name || '—'}
+- Цвета для этого SKU: ${(sku.colors || []).map(c=>`${c.name||c.code} (${c.code}) ${c.percent||''}%`).join(', ') || 'использовать палитру капсулы'}
+
+ЗАДАЧА:
+Сгенерируй один промпт для ${targetName}, где ОБЯЗАТЕЛЬНО:
+1. Сохранены ВСЕ конструктивные особенности прототипа (крой, карманы, капюшон, манжеты, низ, застёжка, силуэт, рукава) — это критично для визуальной согласованности капсулы
+2. Указаны Pantone TCX коды с процентами
+3. Соблюдён стиль/настроение капсулы
+4. Указан тип модели, свет, фон (studio, neutral background, natural soft light) — единый для всей капсулы
+${formatInstruction}
+
+Верни ТОЛЬКО текст промпта, без заголовков и пояснений.`;
+    return await callClaudeAPI(system, user, 1200);
+}
+
+window.callClaudeVision = callClaudeVision;
+window.analyzePrototypeImage = analyzePrototypeImage;
+window.generatePromptFromPrototype = generatePromptFromPrototype;
+
 window.callClaudeAPI = callClaudeAPI;
 window.generatePromptWithClaude = generatePromptWithClaude;
 window.generateItemPrompt = generateItemPrompt;

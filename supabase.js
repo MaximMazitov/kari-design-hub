@@ -577,6 +577,29 @@ window.exitGuestMode = exitGuestMode;
 window.enterGuestMode = enterGuestMode;
 window.showCloudStatus = showCloudStatus;
 
+// =============================================
+// STORAGE — загрузка картинок прототипов
+// =============================================
+async function uploadPrototypeImage(file) {
+    if (!sb || !currentUser) throw new Error('Нужно войти в облако');
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `${currentUser.id}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+    const { error } = await sb.storage.from('prototypes').upload(path, file, {
+        cacheControl: '3600', upsert: false, contentType: file.type
+    });
+    if (error) throw error;
+    const { data } = sb.storage.from('prototypes').getPublicUrl(path);
+    return { path, url: data.publicUrl };
+}
+
+async function deletePrototypeImage(path) {
+    if (!sb || !path) return;
+    try { await sb.storage.from('prototypes').remove([path]); } catch(e){ console.warn(e); }
+}
+
+window.uploadPrototypeImage = uploadPrototypeImage;
+window.deletePrototypeImage = deletePrototypeImage;
+
 // Автозапуск
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => setTimeout(initFirebase, 300));
