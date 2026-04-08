@@ -2,31 +2,98 @@
 // ВКЛАДКА "ПО ПРОТОТИПУ" — Prototype-based capsule generator
 // =============================================
 
-let protoState = {
-    theme: '',
-    season: 'SS25',
-    audience: '',
-    mood: '',
-    description: '',  // развёрнутое описание концепции
-    palette: [],
-    categories: [],
-    anchorCategory: '',   // категория для эталонного образца
-    anchorPrompt: '',     // сгенерированный эталон
-    anchorApproved: false,
-    skus: [],
-    globalTarget: 'midjourney'
-};
+function emptyDraft() {
+    return {
+        id: 'draft-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
+        owner: (window.currentUser && (window.currentUser.email||window.currentUser.id)) || 'local',
+        updatedAt: new Date().toISOString(),
+        theme: '', season: 'SS25', audience: '', mood: '', description: '',
+        palette: [], categories: [],
+        anchorCategory: '', anchorPrompt: '', anchorApproved: false,
+        skus: [], globalTarget: 'midjourney'
+    };
+}
 
-const PROTO_STORAGE_KEY = 'kari-prototype-state';
+let protoDrafts = [];         // массив всех черновиков (все дизайнеры)
+let currentDraftId = null;    // активный черновик
+let protoState = emptyDraft();// ссылка на текущий черновик для работы
+
+const PROTO_DRAFTS_KEY = 'kari-prototype-drafts';
+const PROTO_CURRENT_KEY = 'kari-prototype-current';
 
 function loadProtoState() {
     try {
-        const s = JSON.parse(localStorage.getItem(PROTO_STORAGE_KEY) || 'null');
-        if (s) protoState = Object.assign(protoState, s);
-    } catch (e) {}
+        protoDrafts = JSON.parse(localStorage.getItem(PROTO_DRAFTS_KEY) || '[]');
+        currentDraftId = localStorage.getItem(PROTO_CURRENT_KEY) || null;
+        // Миграция старого формата
+        const old = JSON.parse(localStorage.getItem('kari-prototype-state') || 'null');
+        if (old && !protoDrafts.length) {
+            const d = Object.assign(emptyDraft(), old);
+            protoDrafts.push(d);
+            currentDraftId = d.id;
+            localStorage.removeItem('kari-prototype-state');
+        }
+        if (!protoDrafts.length) {
+            const d = emptyDraft();
+            protoDrafts.push(d);
+            currentDraftId = d.id;
+        }
+        if (!protoDrafts.find(d => d.id === currentDraftId)) {
+            currentDraftId = protoDrafts[0].id;
+        }
+        protoState = protoDrafts.find(d => d.id === currentDraftId);
+    } catch (e) { console.error(e); }
 }
+
 function saveProtoState() {
-    try { localStorage.setItem(PROTO_STORAGE_KEY, JSON.stringify(protoState)); } catch(e){}
+    try {
+        if (protoState) protoState.updatedAt = new Date().toISOString();
+        localStorage.setItem(PROTO_DRAFTS_KEY, JSON.stringify(protoDrafts));
+        localStorage.setItem(PROTO_CURRENT_KEY, currentDraftId || '');
+        // Синк в облако — общий список черновиков для всех дизайнеров
+        if (typeof saveToCloud === 'function' && window.currentUser) {
+            saveToCloud('data', 'proto_drafts', { items: protoDrafts }).catch(()=>{});
+        }
+    } catch(e){}
+}
+
+async function pullProtoDraftsFromCloud() {
+    if (typeof loadFromCloud !== 'function' || !window.currentUser) return;
+    try {
+        const cloud = await loadFromCloud('data', 'proto_drafts');
+        if (cloud && cloud.items && Array.isArray(cloud.items)) {
+            // Merge: облачные + локальные (по id, берём свежее по updatedAt)
+            const map = new Map();
+            cloud.items.forEach(d => map.set(d.id, d));
+            protoDrafts.forEach(d => {
+                const ex = map.get(d.id);
+                if (!ex || new Date(d.updatedAt||0) > new Date(ex.updatedAt||0)) map.set(d.id, d);
+            });
+            protoDrafts = Array.from(map.values());
+            if (!protoDrafts.find(d => d.id === currentDraftId)) currentDraftId = protoDrafts[0]?.id || null;
+            protoState = protoDrafts.find(d => d.id === currentDraftId) || emptyDraft();
+            localStorage.setItem(PROTO_DRAFTS_KEY, JSON.stringify(protoDrafts));
+            localStorage.setItem(PROTO_CURRENT_KEY, currentDraftId || '');
+        }
+    } catch(e){ console.error(e); }
+}
+
+function switchDraft(id) {
+    saveProtoState();
+    currentDraftId = id;
+    protoState = protoDrafts.find(d => d.id === id) || emptyDraft();
+    localStorage.setItem(PROTO_CURRENT_KEY, id);
+    renderPrototypeWizard();
+}
+
+function deleteDraft(id) {
+    if (!confirm('Удалить этот черновик?')) return;
+    protoDrafts = protoDrafts.filter(d => d.id !== id);
+    if (!protoDrafts.length) protoDrafts.push(emptyDraft());
+    if (currentDraftId === id) currentDraftId = protoDrafts[0].id;
+    protoState = protoDrafts.find(d => d.id === currentDraftId);
+    saveProtoState();
+    renderPrototypeWizard();
 }
 
 // =============================================
@@ -66,8 +133,30 @@ function renderPrototypeWizard() {
             .proto-step-num { display:inline-flex; width:28px; height:28px; border-radius:50%; background:#f97316; color:#fff; align-items:center; justify-content:center; font-weight:700; }
         </style>
 
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px">
-            <button class="proto-btn proto-btn-primary" onclick="protoNewCapsule()">🆕 Новая капсула</button>
+        <!-- СПИСОК ЧЕРНОВИКОВ (все дизайнеры) -->
+        <div class="proto-section">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <h3 style="margin:0">📂 Черновики капсул (${protoDrafts.length})</h3>
+                <button class="proto-btn proto-btn-primary" onclick="protoNewCapsule()">🆕 Новая капсула</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px">
+                ${protoDrafts.map(d => {
+                    const active = d.id === currentDraftId;
+                    const title = d.theme || '(без названия)';
+                    const owner = d.owner || 'local';
+                    const skuCount = (d.skus||[]).length;
+                    const updated = d.updatedAt ? new Date(d.updatedAt).toLocaleString('ru-RU') : '';
+                    return `
+                        <div onclick="switchDraft('${d.id}')" style="cursor:pointer;padding:12px;border-radius:10px;border:2px solid ${active?'#f97316':'#e5e7eb'};background:${active?'#fff7ed':'#fff'};position:relative">
+                            <div style="font-weight:600;font-size:14px;margin-bottom:4px">${escapeHtml(title)}</div>
+                            <div style="font-size:11px;color:#6b7280">👤 ${escapeHtml(owner)}</div>
+                            <div style="font-size:11px;color:#6b7280">🧩 ${skuCount} SKU · ${escapeHtml(d.season||'')}</div>
+                            <div style="font-size:10px;color:#9ca3af;margin-top:4px">${updated}</div>
+                            <button onclick="event.stopPropagation();deleteDraft('${d.id}')" style="position:absolute;top:6px;right:6px;background:#fee2e2;color:#dc2626;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:12px">✕</button>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
         </div>
 
         <!-- ШАГ 1: ТЕМА -->
@@ -621,7 +710,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
             if (tab.dataset.tab === 'prototype') {
-                setTimeout(renderPrototypeWizard, 50);
+                setTimeout(async () => {
+                    await pullProtoDraftsFromCloud();
+                    renderPrototypeWizard();
+                }, 50);
             }
         });
     });
@@ -644,14 +736,15 @@ window.saveProtoState = saveProtoState;
 window.protoGenerateAnchor = protoGenerateAnchor;
 
 function protoNewCapsule() {
-    if (!confirm('Начать новую капсулу? Текущий черновик будет очищен (уже сохранённые капсулы останутся во вкладке «Капсулы»).')) return;
-    protoState = {
-        theme: '', season: 'SS25', audience: '', mood: '', description: '',
-        palette: [], categories: [],
-        anchorCategory: '', anchorPrompt: '', anchorApproved: false,
-        skus: [], globalTarget: 'midjourney'
-    };
+    saveProtoState();
+    const d = emptyDraft();
+    protoDrafts.push(d);
+    currentDraftId = d.id;
+    protoState = d;
     saveProtoState();
     renderPrototypeWizard();
+    if (typeof showToast === 'function') showToast('🆕 Создан новый черновик', 'success');
 }
 window.protoNewCapsule = protoNewCapsule;
+window.switchDraft = switchDraft;
+window.deleteDraft = deleteDraft;
