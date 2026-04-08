@@ -379,15 +379,14 @@ async function syncFromCloud() {
         }
         showCloudStatus('connected');
         if (typeof renderCapsules === 'function') renderCapsules();
-
-        // При первом входе — сразу пушим локальные данные обратно в облако (миграция)
-        await syncToCloud();
     } catch (err) {
         console.error('[Supabase] syncFromCloud error:', err);
         showCloudStatus('error');
     } finally {
         syncInProgress = false;
     }
+    // При первом входе — пушим локальные данные в облако (миграция). ВНЕ syncInProgress.
+    try { await syncToCloud(); } catch(e) { console.error('[Supabase] migration push error:', e); }
 }
 
 async function syncToCloud() {
