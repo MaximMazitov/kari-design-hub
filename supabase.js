@@ -577,3 +577,10 @@ window.mergeItemsData = mergeItemsData;
 window.exitGuestMode = exitGuestMode;
 window.enterGuestMode = enterGuestMode;
 window.showCloudStatus = showCloudStatus;
+
+// Автозапуск
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(initFirebase, 300));
+} else {
+    setTimeout(initFirebase, 300);
+}
