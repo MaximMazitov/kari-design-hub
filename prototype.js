@@ -87,13 +87,22 @@ function switchDraft(id) {
 }
 
 function deleteDraft(id) {
-    if (!confirm('Удалить этот черновик?')) return;
-    protoDrafts = protoDrafts.filter(d => d.id !== id);
-    if (!protoDrafts.length) protoDrafts.push(emptyDraft());
-    if (currentDraftId === id) currentDraftId = protoDrafts[0].id;
-    protoState = protoDrafts.find(d => d.id === currentDraftId);
-    saveProtoState();
-    renderPrototypeWizard();
+    const doDelete = () => {
+        protoDrafts = protoDrafts.filter(d => d.id !== id);
+        if (!protoDrafts.length) protoDrafts.push(emptyDraft());
+        if (currentDraftId === id) currentDraftId = protoDrafts[0].id;
+        protoState = protoDrafts.find(d => d.id === currentDraftId);
+        saveProtoState();
+        renderPrototypeWizard();
+    };
+    if (typeof showConfirmDialog === 'function') {
+        showConfirmDialog({
+            title: 'Удалить черновик?',
+            message: 'Этот черновик капсулы будет удалён безвозвратно.',
+            confirmText: 'Удалить', cancelText: 'Отмена', danger: true,
+            onConfirm: doDelete
+        });
+    } else { doDelete(); }
 }
 
 // =============================================
@@ -506,7 +515,20 @@ function protoUpdateAnalysis(skuId, value) {
 async function protoGenerateAllPrompts() {
     if (!protoState.skus.length) { alert('Сначала создай SKU'); return; }
     const withoutAnalysis = protoState.skus.filter(s => !s.analysis && !s.editedAnalysis);
-    if (withoutAnalysis.length && !confirm(`${withoutAnalysis.length} SKU без анализа прототипа — генерить всё равно? (они получат промпты без конструктивных деталей)`)) return;
+    if (withoutAnalysis.length) {
+        if (typeof showConfirmDialog === 'function') {
+            return showConfirmDialog({
+                title: 'Генерация без анализа?',
+                message: `${withoutAnalysis.length} SKU без анализа прототипа — они получат промпты без конструктивных деталей. Продолжить?`,
+                confirmText: 'Генерить', cancelText: 'Отмена',
+                onConfirm: () => protoDoBatchGenerate()
+            });
+        }
+    }
+    return protoDoBatchGenerate();
+}
+
+async function protoDoBatchGenerate() {
 
     const capsule = {
         name: protoState.theme,
