@@ -597,6 +597,7 @@ async function deletePrototypeImage(path) {
     try { await sb.storage.from('prototypes').remove([path]); } catch(e){ console.warn(e); }
 }
 
+Object.defineProperty(window, 'currentUser', { get: () => currentUser, configurable: true });
 window.uploadPrototypeImage = uploadPrototypeImage;
 window.deletePrototypeImage = deletePrototypeImage;
 
