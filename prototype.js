@@ -352,6 +352,7 @@ async function protoHandleFileUpload(skuId, file) {
             sku.prototypePath = null;
             saveProtoState();
             renderProtoSkus();
+            protoAnalyzePrototype(skuId);
         };
         reader.readAsDataURL(file);
         if (typeof showToast === 'function') showToast('⚠️ Не вошёл в облако — сохраняю локально', 'warning');
@@ -364,7 +365,9 @@ async function protoHandleFileUpload(skuId, file) {
         sku.prototypePath = path;
         saveProtoState();
         renderProtoSkus();
-        if (typeof showToast === 'function') showToast('✅ Загружено', 'success');
+        if (typeof showToast === 'function') showToast('✅ Загружено, запускаю анализ...', 'success');
+        // Авто-анализ сразу после загрузки
+        protoAnalyzePrototype(skuId);
     } catch (err) {
         console.error(err);
         if (typeof showToast === 'function') showToast('❌ ' + err.message, 'error');
