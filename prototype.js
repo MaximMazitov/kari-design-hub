@@ -66,6 +66,10 @@ function renderPrototypeWizard() {
             .proto-step-num { display:inline-flex; width:28px; height:28px; border-radius:50%; background:#f97316; color:#fff; align-items:center; justify-content:center; font-weight:700; }
         </style>
 
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px">
+            <button class="proto-btn proto-btn-primary" onclick="protoNewCapsule()">🆕 Новая капсула</button>
+        </div>
+
         <!-- ШАГ 1: ТЕМА -->
         <div class="proto-section">
             <h3><span class="proto-step-num">1</span> Тема капсулы</h3>
@@ -638,3 +642,16 @@ window.protoSaveAsCapsule = protoSaveAsCapsule;
 window.protoState = protoState;
 window.saveProtoState = saveProtoState;
 window.protoGenerateAnchor = protoGenerateAnchor;
+
+function protoNewCapsule() {
+    if (!confirm('Начать новую капсулу? Текущий черновик будет очищен (уже сохранённые капсулы останутся во вкладке «Капсулы»).')) return;
+    protoState = {
+        theme: '', season: 'SS25', audience: '', mood: '', description: '',
+        palette: [], categories: [],
+        anchorCategory: '', anchorPrompt: '', anchorApproved: false,
+        skus: [], globalTarget: 'midjourney'
+    };
+    saveProtoState();
+    renderPrototypeWizard();
+}
+window.protoNewCapsule = protoNewCapsule;
