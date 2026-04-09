@@ -211,13 +211,13 @@ function renderPrototypeWizard() {
                     <label style="font-size:12px;color:#6b7280;font-weight:500;display:block;margin-bottom:8px">Возрастные категории детей:</label>
                     <div style="display:flex;gap:12px;flex-wrap:wrap">
                         <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
-                            <input type="checkbox" id="protoAge0_2" ${(protoState.ageGroups||{}).age0_2?'checked':''} onchange="protoUpdateGender()"> 0–2 года (baby)
+                            <input type="radio" name="protoAge" value="age0_2" ${(protoState.ageGroups||{}).age0_2?'checked':''} onchange="protoSelectAge('age0_2')"> 0–2 года (baby)
                         </label>
                         <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
-                            <input type="checkbox" id="protoAge2_7" ${(protoState.ageGroups||{}).age2_7?'checked':''} onchange="protoUpdateGender()"> 2–7 лет (mini)
+                            <input type="radio" name="protoAge" value="age2_7" ${(protoState.ageGroups||{}).age2_7?'checked':''} onchange="protoSelectAge('age2_7')"> 2–7 лет (mini)
                         </label>
                         <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
-                            <input type="checkbox" id="protoAge7_14" ${(protoState.ageGroups||{}).age7_14?'checked':''} onchange="protoUpdateGender()"> 7–14 лет (junior)
+                            <input type="radio" name="protoAge" value="age7_14" ${(protoState.ageGroups||{}).age7_14?'checked':''} onchange="protoSelectAge('age7_14')"> 7–14 лет (junior)
                         </label>
                     </div>
                 </div>
@@ -327,14 +327,11 @@ function protoSelectGender(val) {
     saveProtoState();
 }
 
-function protoUpdateGender() {
-    protoState.ageGroups = {
-        age0_2: document.getElementById('protoAge0_2')?.checked || false,
-        age2_7: document.getElementById('protoAge2_7')?.checked || false,
-        age7_14: document.getElementById('protoAge7_14')?.checked || false
-    };
+function protoSelectAge(val) {
+    protoState.ageGroups = { age0_2: val==='age0_2', age2_7: val==='age2_7', age7_14: val==='age7_14' };
     saveProtoState();
 }
+window.protoSelectAge = protoSelectAge;
 window.protoSelectGender = protoSelectGender;
 
 function protoGetAudienceText() {
@@ -343,20 +340,9 @@ function protoGetAudienceText() {
     if (g.men) parts.push('мужчины (взрослые)');
     if (g.women) parts.push('женщины (взрослые)');
     const ag = protoState.ageGroups || {};
-    if (g.boys) {
-        const ages = [];
-        if (ag.age0_2) ages.push('0-2 года');
-        if (ag.age2_7) ages.push('2-7 лет');
-        if (ag.age7_14) ages.push('7-14 лет');
-        parts.push('мальчики' + (ages.length ? ' (' + ages.join(', ') + ')' : ''));
-    }
-    if (g.girls) {
-        const ages = [];
-        if (ag.age0_2) ages.push('0-2 года');
-        if (ag.age2_7) ages.push('2-7 лет');
-        if (ag.age7_14) ages.push('7-14 лет');
-        parts.push('девочки' + (ages.length ? ' (' + ages.join(', ') + ')' : ''));
-    }
+    const ageLabel = ag.age0_2 ? '0-2 года' : ag.age2_7 ? '2-7 лет' : ag.age7_14 ? '7-14 лет' : '';
+    if (g.boys) parts.push('мальчики' + (ageLabel ? ' (' + ageLabel + ')' : ''));
+    if (g.girls) parts.push('девочки' + (ageLabel ? ' (' + ageLabel + ')' : ''));
     return parts.length ? parts.join(', ') : 'не указана';
 }
 window.protoUpdateGender = protoUpdateGender;
