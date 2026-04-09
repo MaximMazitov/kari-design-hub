@@ -345,7 +345,6 @@ function protoGetAudienceText() {
     if (g.girls) parts.push('девочки' + (ageLabel ? ' (' + ageLabel + ')' : ''));
     return parts.length ? parts.join(', ') : 'не указана';
 }
-window.protoUpdateGender = protoUpdateGender;
 
 function escapeHtml(s) {
     return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
