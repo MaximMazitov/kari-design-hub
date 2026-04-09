@@ -7,7 +7,9 @@ function emptyDraft() {
         id: 'draft-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
         owner: (window.currentUser && (window.currentUser.email||window.currentUser.id)) || 'local',
         updatedAt: new Date().toISOString(),
-        theme: '', season: 'SS25', audience: '', mood: '', description: '',
+        theme: '', season: 'SS25', mood: '', description: '',
+        gender: { men: false, women: false, boys: false, girls: false },
+        ageGroups: { age0_2: false, age2_7: false, age7_14: false },
         palette: [], categories: [],
         anchorCategory: '', anchorPrompt: '', anchorApproved: false,
         skus: [], globalTarget: 'midjourney'
@@ -183,12 +185,41 @@ function renderPrototypeWizard() {
                     </select>
                 </div>
                 <div class="proto-field">
-                    <label>Целевая аудитория</label>
-                    <input type="text" id="protoAudience" placeholder="Унисекс, 20-35" value="${escapeHtml(protoState.audience)}">
-                </div>
-                <div class="proto-field">
                     <label>Настроение / стиль</label>
                     <input type="text" id="protoMood" placeholder="минимализм, техничные ткани" value="${escapeHtml(protoState.mood)}">
+                </div>
+            </div>
+            <!-- ПОЛ И ВОЗРАСТ -->
+            <div style="margin-top:16px;padding:16px;background:#f9fafb;border-radius:12px;border:1px solid #e5e7eb">
+                <label style="font-size:13px;color:#6b7280;font-weight:500;display:block;margin-bottom:10px">Пол и возрастная группа</label>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+                    <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer">
+                        <input type="checkbox" id="protoGenderMen" ${(protoState.gender||{}).men?'checked':''} onchange="protoUpdateGender()"> 👨 Мужчины
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer">
+                        <input type="checkbox" id="protoGenderWomen" ${(protoState.gender||{}).women?'checked':''} onchange="protoUpdateGender()"> 👩 Женщины
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer">
+                        <input type="checkbox" id="protoGenderBoys" ${(protoState.gender||{}).boys?'checked':''} onchange="protoUpdateGender()"> 👦 Мальчики
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer">
+                        <input type="checkbox" id="protoGenderGirls" ${(protoState.gender||{}).girls?'checked':''} onchange="protoUpdateGender()"> 👧 Девочки
+                    </label>
+                </div>
+                <!-- Возрастные группы для детей -->
+                <div id="protoAgeGroups" style="display:${((protoState.gender||{}).boys||(protoState.gender||{}).girls)?'block':'none'};padding:10px;background:#fff;border-radius:8px;border:1px solid #e5e7eb">
+                    <label style="font-size:12px;color:#6b7280;font-weight:500;display:block;margin-bottom:8px">Возрастные категории детей:</label>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap">
+                        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+                            <input type="checkbox" id="protoAge0_2" ${(protoState.ageGroups||{}).age0_2?'checked':''} onchange="protoUpdateGender()"> 0–2 года (baby)
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+                            <input type="checkbox" id="protoAge2_7" ${(protoState.ageGroups||{}).age2_7?'checked':''} onchange="protoUpdateGender()"> 2–7 лет (mini)
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+                            <input type="checkbox" id="protoAge7_14" ${(protoState.ageGroups||{}).age7_14?'checked':''} onchange="protoUpdateGender()"> 7–14 лет (junior)
+                        </label>
+                    </div>
                 </div>
             </div>
             <div class="proto-field" style="margin-top:16px">
@@ -265,12 +296,11 @@ function renderPrototypeWizard() {
     `;
 
     // Attach onchange for top fields
-    ['protoTheme','protoSeason','protoAudience','protoMood','protoDescription'].forEach(id => {
+    ['protoTheme','protoSeason','protoMood','protoDescription'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', () => {
             protoState.theme = document.getElementById('protoTheme').value;
             protoState.season = document.getElementById('protoSeason').value;
-            protoState.audience = document.getElementById('protoAudience').value;
             protoState.mood = document.getElementById('protoMood').value;
             protoState.description = document.getElementById('protoDescription').value;
             saveProtoState();
@@ -285,6 +315,48 @@ function renderPrototypeWizard() {
     renderProtoCategories();
     renderProtoSkus();
 }
+
+function protoUpdateGender() {
+    protoState.gender = {
+        men: document.getElementById('protoGenderMen')?.checked || false,
+        women: document.getElementById('protoGenderWomen')?.checked || false,
+        boys: document.getElementById('protoGenderBoys')?.checked || false,
+        girls: document.getElementById('protoGenderGirls')?.checked || false
+    };
+    protoState.ageGroups = {
+        age0_2: document.getElementById('protoAge0_2')?.checked || false,
+        age2_7: document.getElementById('protoAge2_7')?.checked || false,
+        age7_14: document.getElementById('protoAge7_14')?.checked || false
+    };
+    // показать/скрыть возрастные группы
+    const ageBlock = document.getElementById('protoAgeGroups');
+    if (ageBlock) ageBlock.style.display = (protoState.gender.boys || protoState.gender.girls) ? 'block' : 'none';
+    saveProtoState();
+}
+
+function protoGetAudienceText() {
+    const parts = [];
+    const g = protoState.gender || {};
+    if (g.men) parts.push('мужчины (взрослые)');
+    if (g.women) parts.push('женщины (взрослые)');
+    const ag = protoState.ageGroups || {};
+    if (g.boys) {
+        const ages = [];
+        if (ag.age0_2) ages.push('0-2 года');
+        if (ag.age2_7) ages.push('2-7 лет');
+        if (ag.age7_14) ages.push('7-14 лет');
+        parts.push('мальчики' + (ages.length ? ' (' + ages.join(', ') + ')' : ''));
+    }
+    if (g.girls) {
+        const ages = [];
+        if (ag.age0_2) ages.push('0-2 года');
+        if (ag.age2_7) ages.push('2-7 лет');
+        if (ag.age7_14) ages.push('7-14 лет');
+        parts.push('девочки' + (ages.length ? ' (' + ages.join(', ') + ')' : ''));
+    }
+    return parts.length ? parts.join(', ') : 'не указана';
+}
+window.protoUpdateGender = protoUpdateGender;
 
 function escapeHtml(s) {
     return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -534,7 +606,7 @@ async function protoDoBatchGenerate() {
         name: protoState.theme,
         theme: protoState.theme,
         season: protoState.season,
-        audience: protoState.audience,
+        audience: protoGetAudienceText(),
         mood: protoState.mood,
         description: protoState.description,
         anchorPrompt: protoState.anchorPrompt,
@@ -569,7 +641,7 @@ async function protoRegenerateOne(skuId) {
     if (!sku) return;
     const capsule = {
         name: protoState.theme, theme: protoState.theme, season: protoState.season,
-        audience: protoState.audience, mood: protoState.mood,
+        audience: protoGetAudienceText(), mood: protoState.mood,
         palette: protoState.palette, categories: protoState.categories
     };
     if (typeof showToast === 'function') showToast('⚡ Генерация...', 'info');
@@ -612,7 +684,7 @@ async function protoGenerateAnchor() {
     const user = `КАПСУЛА:
 - Тема: ${protoState.theme}
 - Сезон: ${protoState.season}
-- Аудитория: ${protoState.audience}
+- Аудитория: ${protoGetAudienceText()}
 - Настроение: ${protoState.mood}
 
 РАЗВЁРНУТОЕ ОПИСАНИЕ:
@@ -666,7 +738,7 @@ function protoSaveAsCapsule() {
         name: protoState.theme,
         theme: protoState.theme,
         season: protoState.season,
-        audience: protoState.audience,
+        audience: protoGetAudienceText(),
         mood: protoState.mood,
         palette: protoState.palette,
         categories: protoState.categories.reduce((acc,c)=>{acc[c.key||c.name]=c.count;return acc},{}),
