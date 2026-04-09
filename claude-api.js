@@ -971,7 +971,8 @@ async function analyzePrototypeImage(imageUrl) {
 // Генерация финального промпта по SKU с учётом анализа прототипа
 async function generatePromptFromPrototype({ capsule, sku, prototypeAnalysis, target }) {
     const targetName = target === 'gpt' ? 'ChatGPT / DALL·E' : target === 'banana' ? 'Google Nano Banana (Gemini)' : 'Midjourney';
-    const colorsLine = (capsule.palette || []).map(c => `${c.name || c.code} (${c.code}) — ${c.percent || ''}%`).join(', ');
+    const capsulePaletteLine = (capsule.palette || []).map(c => `${c.name || c.code} (${c.code})`).join(', ');
+    const skuColorsLine = (sku.colors || []).filter(c=>c.percent>0).map(c => `${c.name||c.code} (${c.code}) — ${c.percent}%`).join(', ');
     const catsLine = (capsule.categories || []).map(c => `${c.name}×${c.count}`).join(', ');
 
     let formatInstruction;
@@ -1000,8 +1001,8 @@ ${capsule.anchorPrompt}
 """
 ` : ''}
 
-ПАЛИТРА PANTONE TCX (обязательно использовать коды):
-${colorsLine}
+ПАЛИТРА КАПСУЛЫ (общая, для справки):
+${capsulePaletteLine}
 
 ПРОТОТИП ИЗДЕЛИЯ (результат AI-анализа фото — ОБЯЗАТЕЛЬНО сохранить ВСЕ конструктивные детали):
 ${JSON.stringify(prototypeAnalysis, null, 2)}
@@ -1009,12 +1010,12 @@ ${JSON.stringify(prototypeAnalysis, null, 2)}
 ТЕКУЩЕЕ SKU:
 - Категория: ${sku.category}
 - Название: ${sku.name || '—'}
-- Цвета для этого SKU: ${(sku.colors || []).map(c=>`${c.name||c.code} (${c.code}) ${c.percent||''}%`).join(', ') || 'использовать палитру капсулы'}
+- ЦВЕТА ЭТОГО SKU (ОБЯЗАТЕЛЬНО использовать ТОЛЬКО эти цвета с указанными процентами): ${skuColorsLine || 'цвета не назначены — используй палитру капсулы на своё усмотрение'}
 
 ЗАДАЧА:
 Сгенерируй один промпт для ${targetName}, где ОБЯЗАТЕЛЬНО:
 1. Сохранены ВСЕ конструктивные особенности прототипа (крой, карманы, капюшон, манжеты, низ, застёжка, силуэт, рукава) — это критично для визуальной согласованности капсулы
-2. Указаны Pantone TCX коды с процентами
+2. Указаны ТОЛЬКО назначенные цвета Pantone TCX с процентами (не добавляй лишних цветов)
 3. Соблюдён стиль/настроение капсулы
 4. Указан тип модели, свет, фон (studio, neutral background, natural soft light) — единый для всей капсулы
 ${formatInstruction}

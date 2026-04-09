@@ -367,7 +367,6 @@ function renderProtoPalette() {
                 <div style="font-weight:600;font-size:14px">${escapeHtml(c.name||c.code)}</div>
                 <div style="font-size:12px;color:#6b7280">${escapeHtml(c.code)}</div>
             </div>
-            <input type="number" min="0" max="100" value="${c.percent||0}" onchange="protoState.palette[${i}].percent=parseInt(this.value)||0;saveProtoState()" style="width:70px;padding:6px;border:1px solid #e5e7eb;border-radius:6px" placeholder="%">
             <button class="proto-btn proto-btn-danger" onclick="protoState.palette.splice(${i},1);saveProtoState();renderProtoPalette()">✕</button>
         </div>
     `).join('');
@@ -483,6 +482,22 @@ function renderProtoSkus() {
                     ${sku.prototypeUrl ? `<button class="proto-btn proto-btn-secondary" style="margin-top:8px;width:140px;font-size:12px" onclick="protoAnalyzePrototype('${sku.id}')">${sku.analysis ? '🔄 Переанализ' : '🔍 Анализ AI'}</button>` : ''}
                 </div>
                 <div>
+                    <!-- ЦВЕТА SKU из палитры капсулы -->
+                    <label style="font-size:13px;color:#6b7280;font-weight:500;display:block;margin-bottom:6px">🎨 Цвета этого SKU:</label>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+                        ${protoState.palette.map((pc, ci) => {
+                            const skuColor = (sku.colors||[]).find(c => c.code === pc.code);
+                            const isSelected = !!skuColor;
+                            return `<div style="display:flex;align-items:center;gap:4px;padding:4px 8px;background:${isSelected?'#fff7ed':'#f9fafb'};border:2px solid ${isSelected?'#f97316':'#e5e7eb'};border-radius:8px;cursor:pointer" onclick="protoToggleSkuColor(${i},'${escapeHtml(pc.code)}')">
+                                <div style="width:18px;height:18px;border-radius:4px;background:${pc.hex||'#ccc'};border:1px solid rgba(0,0,0,0.1)"></div>
+                                <span style="font-size:11px;font-weight:${isSelected?'600':'400'}">${escapeHtml(pc.name||pc.code)}</span>
+                                ${isSelected ? `<input type="number" min="1" max="100" value="${skuColor.percent||0}" onclick="event.stopPropagation()" onchange="protoSetSkuColorPercent(${i},'${escapeHtml(pc.code)}',this.value)" style="width:45px;padding:2px 4px;border:1px solid #d1d5db;border-radius:4px;font-size:11px;text-align:center" placeholder="%">
+                                <span style="font-size:10px;color:#6b7280">%</span>` : ''}
+                            </div>`;
+                        }).join('')}
+                    </div>
+                    ${!protoState.palette.length ? '<div style="color:#9ca3af;font-size:12px;margin-bottom:8px">Сначала добавь цвета в палитру (шаг 2)</div>' : ''}
+
                     ${sku.analysis ? `
                         <label style="font-size:13px;color:#6b7280;font-weight:500">Анализ прототипа (можно редактировать):</label>
                         <textarea class="proto-analysis-box" onchange="protoUpdateAnalysis('${sku.id}', this.value)" style="width:100%;min-height:180px">${escapeHtml(JSON.stringify(sku.editedAnalysis || sku.analysis, null, 2))}</textarea>
@@ -498,6 +513,35 @@ function renderProtoSkus() {
         </div>
     `).join('');
 }
+
+// =============================================
+// ЦВЕТА SKU
+// =============================================
+function protoToggleSkuColor(skuIdx, colorCode) {
+    const sku = protoState.skus[skuIdx];
+    if (!sku) return;
+    if (!sku.colors) sku.colors = [];
+    const idx = sku.colors.findIndex(c => c.code === colorCode);
+    if (idx >= 0) {
+        sku.colors.splice(idx, 1);
+    } else {
+        const palColor = protoState.palette.find(c => c.code === colorCode);
+        sku.colors.push({ code: colorCode, name: palColor?.name || colorCode, hex: palColor?.hex || '#ccc', percent: 0 });
+    }
+    saveProtoState();
+    renderProtoSkus();
+}
+
+function protoSetSkuColorPercent(skuIdx, colorCode, val) {
+    const sku = protoState.skus[skuIdx];
+    if (!sku || !sku.colors) return;
+    const c = sku.colors.find(c => c.code === colorCode);
+    if (c) c.percent = parseInt(val) || 0;
+    saveProtoState();
+}
+
+window.protoToggleSkuColor = protoToggleSkuColor;
+window.protoSetSkuColorPercent = protoSetSkuColorPercent;
 
 // =============================================
 // ЗАГРУЗКА И АНАЛИЗ
