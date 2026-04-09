@@ -194,16 +194,16 @@ function renderPrototypeWizard() {
                 <label style="font-size:13px;color:#6b7280;font-weight:500;display:block;margin-bottom:10px">Пол и возрастная группа</label>
                 <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">
                     <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer">
-                        <input type="checkbox" id="protoGenderMen" ${(protoState.gender||{}).men?'checked':''} onchange="protoUpdateGender()"> 👨 Мужчины
+                        <input type="radio" name="protoGender" value="men" ${(protoState.gender||{}).men?'checked':''} onchange="protoSelectGender('men')"> 👨 Мужчины
                     </label>
                     <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer">
-                        <input type="checkbox" id="protoGenderWomen" ${(protoState.gender||{}).women?'checked':''} onchange="protoUpdateGender()"> 👩 Женщины
+                        <input type="radio" name="protoGender" value="women" ${(protoState.gender||{}).women?'checked':''} onchange="protoSelectGender('women')"> 👩 Женщины
                     </label>
                     <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer">
-                        <input type="checkbox" id="protoGenderBoys" ${(protoState.gender||{}).boys?'checked':''} onchange="protoUpdateGender()"> 👦 Мальчики
+                        <input type="radio" name="protoGender" value="boys" ${(protoState.gender||{}).boys?'checked':''} onchange="protoSelectGender('boys')"> 👦 Мальчики
                     </label>
                     <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer">
-                        <input type="checkbox" id="protoGenderGirls" ${(protoState.gender||{}).girls?'checked':''} onchange="protoUpdateGender()"> 👧 Девочки
+                        <input type="radio" name="protoGender" value="girls" ${(protoState.gender||{}).girls?'checked':''} onchange="protoSelectGender('girls')"> 👧 Девочки
                     </label>
                 </div>
                 <!-- Возрастные группы для детей -->
@@ -316,23 +316,26 @@ function renderPrototypeWizard() {
     renderProtoSkus();
 }
 
+function protoSelectGender(val) {
+    protoState.gender = { men: val==='men', women: val==='women', boys: val==='boys', girls: val==='girls' };
+    // Если выбраны взрослые — сбросить детские возрасты
+    if (val === 'men' || val === 'women') {
+        protoState.ageGroups = { age0_2: false, age2_7: false, age7_14: false };
+    }
+    const ageBlock = document.getElementById('protoAgeGroups');
+    if (ageBlock) ageBlock.style.display = (val === 'boys' || val === 'girls') ? 'block' : 'none';
+    saveProtoState();
+}
+
 function protoUpdateGender() {
-    protoState.gender = {
-        men: document.getElementById('protoGenderMen')?.checked || false,
-        women: document.getElementById('protoGenderWomen')?.checked || false,
-        boys: document.getElementById('protoGenderBoys')?.checked || false,
-        girls: document.getElementById('protoGenderGirls')?.checked || false
-    };
     protoState.ageGroups = {
         age0_2: document.getElementById('protoAge0_2')?.checked || false,
         age2_7: document.getElementById('protoAge2_7')?.checked || false,
         age7_14: document.getElementById('protoAge7_14')?.checked || false
     };
-    // показать/скрыть возрастные группы
-    const ageBlock = document.getElementById('protoAgeGroups');
-    if (ageBlock) ageBlock.style.display = (protoState.gender.boys || protoState.gender.girls) ? 'block' : 'none';
     saveProtoState();
 }
+window.protoSelectGender = protoSelectGender;
 
 function protoGetAudienceText() {
     const parts = [];
