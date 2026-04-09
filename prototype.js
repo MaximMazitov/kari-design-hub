@@ -276,7 +276,10 @@ function renderPrototypeWizard() {
 
         <!-- ШАГ 5: SKU + ПРОТОТИПЫ -->
         <div class="proto-section">
-            <h3><span class="proto-step-num">5</span> SKU и прототипы <span style="font-size:13px; color:#6b7280; font-weight:normal;">(загрузи фото прототипа для каждого SKU — AI проанализирует крой)</span></h3>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <h3 style="margin:0"><span class="proto-step-num">5</span> SKU и прототипы <span style="font-size:13px; color:#6b7280; font-weight:normal;">(загрузи фото прототипа — AI проанализирует крой)</span></h3>
+                <button class="proto-btn proto-btn-primary" onclick="protoGenerateSkus()">🔄 Создать / обновить SKU</button>
+            </div>
             <div id="protoSkuList"></div>
         </div>
 
