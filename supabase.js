@@ -230,6 +230,24 @@ function hideLoginScreen() {
     if (loginScreen) loginScreen.style.display = 'none';
     if (main) main.style.display = 'block';
     if (header) header.style.display = 'block';
+
+    // Устанавливаем инициалы пользователя в аватар
+    const avatarEl = document.getElementById('userAvatar');
+    if (avatarEl) {
+        let initials = '👤';
+        if (currentUser && currentUser.email) {
+            const name = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+            const parts = name.trim().split(/[\s._-]+/);
+            if (parts.length >= 2) {
+                initials = (parts[0][0] + parts[1][0]).toUpperCase();
+            } else if (parts[0]) {
+                initials = parts[0].substring(0, 2).toUpperCase();
+            }
+        } else if (guestMode) {
+            initials = '👤';
+        }
+        avatarEl.textContent = initials;
+    }
 }
 
 function showLoginError(message) {
