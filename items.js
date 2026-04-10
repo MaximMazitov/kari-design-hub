@@ -326,14 +326,29 @@ window.lazyImageHTML = lazyImageHTML;
 window.observeLazyImages = observeLazyImages;
 window.initLazyLoading = initLazyLoading;
 
-// Зум по клику — берёт реальный src из img (data-src или src)
+// Зум по клику — берёт реальный src из img
 function zoomThumbImage(el) {
     const img = el.tagName === 'IMG' ? el : el.querySelector('img');
-    if (!img) return;
-    const src = img.dataset.src && img.src !== img.dataset.src ? img.dataset.src : img.src;
-    if (!src || src.startsWith('data:image/svg')) return;
+    if (!img) { console.warn('[Zoom] no img found'); return; }
+    // Приоритет: currentSrc > src > data-src
+    let src = img.currentSrc || img.src;
+    // Пропускаем placeholder
+    if (!src || src.includes('data:image/svg+xml')) {
+        src = img.dataset.src || img.getAttribute('data-src');
+    }
+    if (!src) { console.warn('[Zoom] no src found'); return; }
+    console.log('[Zoom] opening:', src.substring(0, 80));
+
+    // Используем protoOpenZoom из prototype.js, или fallback inline
     if (typeof window.protoOpenZoom === 'function') {
         window.protoOpenZoom(src);
+    } else {
+        // Fallback — простой полноэкранный просмотр
+        const ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2147483646;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+        ov.innerHTML = `<img src="${src}" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px;">`;
+        ov.onclick = () => ov.remove();
+        document.body.appendChild(ov);
     }
 }
 window.zoomThumbImage = zoomThumbImage;
@@ -925,11 +940,14 @@ function openItemModal(itemId) {
                 <div class="item-detail-section">
                     <div class="item-detail-label">Изображение</div>
                     <input type="file" id="itemImageInput" accept="image/*" style="display:none;" onchange="handleItemImageUpload(event)">
-                    <div class="image-upload-area" onclick="document.getElementById('itemImageInput').click()" style="cursor:pointer;">
+                    <div class="image-upload-area" ${item.images && item.images.length > 0 ? '' : 'onclick="document.getElementById(\'itemImageInput\').click()"'} style="cursor:${item.images && item.images.length > 0 ? 'zoom-in' : 'pointer'};">
                         ${imagePreview}
                     </div>
                     ${item.images && item.images.length > 0 ? `
-                        <button class="btn btn-secondary" style="margin-top:8px;width:100%;" onclick="removeItemImage()">🗑️ Удалить фото</button>
+                        <div style="display:flex;gap:8px;margin-top:8px">
+                            <button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('itemImageInput').click()">📎 Заменить фото</button>
+                            <button class="btn btn-secondary" style="flex:1" onclick="removeItemImage()">🗑️ Удалить фото</button>
+                        </div>
                     ` : ''}
                 </div>
             </div>
