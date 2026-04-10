@@ -60,14 +60,11 @@ body {
 .logo-icon {
     width: 40px;
     height: 40px;
-    background: linear-gradient(135deg, var(--kari-fuchsia), var(--kari-fuchsia-dark));
+    background: #fff;
+    border: 2px solid var(--kari-fuchsia);
     border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 700;
-    font-size: 18px;
+    object-fit: contain;
+    padding: 4px;
 }
 
 .logo-text h1 { font-size: 16px; font-weight: 700; color: var(--gray-900); }
