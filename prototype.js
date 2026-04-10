@@ -821,7 +821,7 @@ function protoSaveAsCapsule() {
             promptTarget: s.target || protoState.globalTarget,
             prototypeUrl: s.prototypeUrl || null,
             prototypeAnalysis: s.editedAnalysis || s.analysis || null,
-            images: [],
+            images: s.prototypeUrl ? [s.prototypeUrl] : [],
             comments: [],
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()

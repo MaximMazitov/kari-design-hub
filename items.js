@@ -769,7 +769,7 @@ function renderTable(items) {
                     : '📷'}</div></td>
                 <td><span class="item-sku">${i.sku || i.id || ''}</span></td>
                 <td><span class="item-name">${i.name}</span></td>
-                <td>${catLabels[i.category]}</td>
+                <td>${catLabels[i.category] || i.categoryLabel || i.category || '—'}</td>
                 <td><div class="item-colors"><div class="color-dot" style="background:${i.baseColor?.hex || i.colors?.[0]?.hex || '#ccc'}"></div><div class="color-dot" style="background:${i.accentColor?.hex || i.colors?.[1]?.hex || '#eee'}"></div></div></td>
                 <td><span class="item-status ${i.status}">${statLabels[i.status]}</span></td>
                 <td><span class="item-price">${(i.priceTarget || i.price || 0).toLocaleString()}₽</span></td>
