@@ -737,7 +737,7 @@ function renderTable(items) {
         <thead><tr><th></th><th>SKU</th><th>Название</th><th>Категория</th><th>Цвета</th><th>Статус</th><th>Цена</th></tr></thead>
         <tbody>${filtered.map(i => `
             <tr onclick="openItemModal('${i.id}')">
-                <td><div class="item-image-thumb">${i.images && i.images.length > 0
+                <td><div class="item-image-thumb" ${i.images && i.images.length > 0 ? `onclick="event.stopPropagation();window.protoOpenZoom&&window.protoOpenZoom('${(i.images[0]||'').replace(/'/g,"\\'")}');return false" style="cursor:zoom-in"` : ''}>${i.images && i.images.length > 0
                     ? lazyImageHTML(i.images[0], i.name, 'item-thumb-img')
                     : '📷'}</div></td>
                 <td><span class="item-sku">${i.sku || i.id || ''}</span></td>
@@ -826,8 +826,8 @@ function openItemModal(itemId) {
     const paletteColors = capsule ? getCapsulePaletteColors(capsule) : [];
 
     // Превью изображения
-    const imagePreview = item.images && item.images.length > 0 
-        ? `<img src="${item.images[0]}" style="max-width:100%;max-height:200px;border-radius:8px;object-fit:cover;">`
+    const imagePreview = item.images && item.images.length > 0
+        ? `<img src="${item.images[0]}" style="max-width:100%;max-height:200px;border-radius:8px;object-fit:cover;cursor:zoom-in" onclick="event.stopPropagation();window.protoOpenZoom&&window.protoOpenZoom('${(item.images[0]||'').replace(/'/g,"\\'")}');">`
         : `<div class="image-upload-icon">📷</div>
            <div class="image-upload-text">Нажмите для загрузки</div>`;
     
