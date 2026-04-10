@@ -18,8 +18,8 @@ const defaultColors = [
 // =============================================
 // IMAGE COMPRESSION UTILITY
 // =============================================
-const MAX_IMAGE_SIZE_KB = 500;
-const MAX_IMAGE_DIMENSION = 2000;
+const MAX_IMAGE_SIZE_KB = 2000;
+const MAX_IMAGE_DIMENSION = 4096;
 
 /**
  * Сжимает изображение до указанного размера
@@ -58,7 +58,7 @@ async function compressImage(file, maxSizeKB = MAX_IMAGE_SIZE_KB, maxDimension =
                 ctx.drawImage(img, 0, 0, width, height);
 
                 // Сжимаем с подбором качества
-                let quality = 0.9;
+                let quality = 0.95;
                 let result = canvas.toDataURL('image/jpeg', quality);
 
                 // Уменьшаем качество пока не достигнем целевого размера
