@@ -124,7 +124,7 @@ function renderPrototypeWizard() {
             .proto-cat-row { display:flex; gap:12px; align-items:center; margin-bottom:10px; padding:12px 16px; background:#f9fafb; border:1px solid var(--gray-200,#e5e7eb); border-radius:12px; transition:all 0.2s; }
             .proto-cat-row:hover { border-color:var(--gray-300,#d1d5db); box-shadow:0 1px 4px rgba(0,0,0,0.04); }
             .proto-cat-row input[type="text"] { flex:1; padding:10px 14px; border:1px solid var(--gray-200,#e5e7eb); border-radius:10px; font-size:14px; font-family:inherit; transition:all 0.2s; background:#fff; }
-            .proto-cat-row input[type="text"]:focus { outline:none; border-color:#f97316; box-shadow:0 0 0 3px rgba(249,115,22,0.1); }
+            .proto-cat-row input[type="text"]:focus { outline:none; border-color:#A03472; box-shadow:0 0 0 3px rgba(160,52,114,0.1); }
             .proto-cat-count { display:flex; align-items:center; gap:0; }
             .proto-cat-count button { width:34px; height:34px; border:1px solid var(--gray-200,#e5e7eb); background:#fff; font-size:18px; font-weight:600; cursor:pointer; color:#374151; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
             .proto-cat-count button:hover { background:#f3f4f6; }
@@ -132,7 +132,7 @@ function renderPrototypeWizard() {
             .proto-cat-count button:last-child { border-radius:0 10px 10px 0; }
             .proto-cat-count span { width:42px; height:34px; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:600; border-top:1px solid var(--gray-200,#e5e7eb); border-bottom:1px solid var(--gray-200,#e5e7eb); background:#fff; color:#111827; }
             .proto-btn { padding:10px 16px; border-radius:10px; border:none; font-weight:600; cursor:pointer; font-size:14px; }
-            .proto-btn-primary { background:#f97316; color:#fff; }
+            .proto-btn-primary { background:#A03472; color:#fff; }
             .proto-btn-secondary { background:#f3f4f6; color:#374151; }
             .proto-btn-danger { background:#fee2e2; color:#dc2626; }
             .proto-btn:hover { opacity:0.9; }
@@ -149,9 +149,9 @@ function renderPrototypeWizard() {
             .proto-color-swatch { width:14px; height:14px; border-radius:50%; border:1px solid rgba(0,0,0,0.1); }
             .proto-prompt-box { background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:12px; font-size:13px; white-space:pre-wrap; margin-top:8px; }
             .proto-target-selector { display:flex; gap:16px; align-items:center; padding:12px; background:#fef3c7; border-radius:10px; margin-bottom:16px; }
-            .proto-loading { display:inline-block; width:14px; height:14px; border:2px solid #d1d5db; border-top-color:#f97316; border-radius:50%; animation:spin 0.8s linear infinite; }
+            .proto-loading { display:inline-block; width:14px; height:14px; border:2px solid #d1d5db; border-top-color:#A03472; border-radius:50%; animation:spin 0.8s linear infinite; }
             @keyframes spin { to { transform:rotate(360deg); } }
-            .proto-step-num { display:inline-flex; width:28px; height:28px; border-radius:50%; background:#f97316; color:#fff; align-items:center; justify-content:center; font-weight:700; }
+            .proto-step-num { display:inline-flex; width:28px; height:28px; border-radius:50%; background:#A03472; color:#fff; align-items:center; justify-content:center; font-weight:700; }
         </style>
 
         <!-- СПИСОК ЧЕРНОВИКОВ (все дизайнеры) -->
@@ -168,7 +168,7 @@ function renderPrototypeWizard() {
                     const skuCount = (d.skus||[]).length;
                     const updated = d.updatedAt ? new Date(d.updatedAt).toLocaleString('ru-RU') : '';
                     return `
-                        <div onclick="switchDraft('${d.id}')" style="cursor:pointer;padding:12px;border-radius:10px;border:2px solid ${active?'#f97316':'#e5e7eb'};background:${active?'#fff7ed':'#fff'};position:relative">
+                        <div onclick="switchDraft('${d.id}')" style="cursor:pointer;padding:12px;border-radius:10px;border:2px solid ${active?'#A03472':'#e5e7eb'};background:${active?'#F8E8F2':'#fff'};position:relative">
                             <div style="font-weight:600;font-size:14px;margin-bottom:4px">${escapeHtml(title)}</div>
                             <div style="font-size:11px;color:#6b7280">👤 ${escapeHtml(owner)}</div>
                             <div style="font-size:11px;color:#6b7280">🧩 ${skuCount} SKU · ${escapeHtml(d.season||'')}</div>
@@ -516,7 +516,7 @@ function renderProtoSkus() {
                         ${protoState.palette.map((pc, ci) => {
                             const skuColor = (sku.colors||[]).find(c => c.code === pc.code);
                             const isSelected = !!skuColor;
-                            return `<div style="display:flex;align-items:center;gap:4px;padding:4px 8px;background:${isSelected?'#fff7ed':'#f9fafb'};border:2px solid ${isSelected?'#f97316':'#e5e7eb'};border-radius:8px;cursor:pointer" onclick="protoToggleSkuColor(${i},'${escapeHtml(pc.code)}')">
+                            return `<div style="display:flex;align-items:center;gap:4px;padding:4px 8px;background:${isSelected?'#F8E8F2':'#f9fafb'};border:2px solid ${isSelected?'#A03472':'#e5e7eb'};border-radius:8px;cursor:pointer" onclick="protoToggleSkuColor(${i},'${escapeHtml(pc.code)}')">
                                 <div style="width:18px;height:18px;border-radius:4px;background:${pc.hex||'#ccc'};border:1px solid rgba(0,0,0,0.1)"></div>
                                 <span style="font-size:11px;font-weight:${isSelected?'600':'400'}">${escapeHtml(pc.name||pc.code)}</span>
                                 ${isSelected ? `<input type="number" min="1" max="100" value="${skuColor.percent||0}" onclick="event.stopPropagation()" onchange="protoSetSkuColorPercent(${i},'${escapeHtml(pc.code)}',this.value)" style="width:45px;padding:2px 4px;border:1px solid #d1d5db;border-radius:4px;font-size:11px;text-align:center" placeholder="%">

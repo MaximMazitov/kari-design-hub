@@ -4,8 +4,8 @@
   "description": "Pipeline Management для дизайна детской одежды KARI",
   "start_url": "/index.html",
   "display": "standalone",
-  "background_color": "#F9FAFB",
-  "theme_color": "#E8601C",
+  "background_color": "#F4F4F4",
+  "theme_color": "#A03472",
   "orientation": "any",
   "icons": [
     {

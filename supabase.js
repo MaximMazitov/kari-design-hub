@@ -170,7 +170,7 @@ function showLoginScreen() {
             #loginScreen { position: fixed; inset: 0; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); display: flex; align-items: center; justify-content: center; z-index: 10000; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
             .login-container { background: white; border-radius: 24px; padding: 48px; width: 100%; max-width: 420px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
             .login-logo { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:32px; }
-            .login-logo-icon { width:56px; height:56px; background: linear-gradient(135deg,#E8601C,#D4540F); border-radius:16px; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:24px; }
+            .login-logo-icon { width:56px; height:56px; background: linear-gradient(135deg,#A03472,#8A2D62); border-radius:16px; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:24px; }
             .login-logo-text h1 { font-size:24px; font-weight:700; color:#111827; margin:0; }
             .login-logo-text span { font-size:13px; color:#6B7280; }
             .login-title { text-align:center; font-size:18px; font-weight:600; color:#374151; margin-bottom:24px; }
@@ -178,11 +178,11 @@ function showLoginScreen() {
             .login-input-group { display:flex; flex-direction:column; gap:8px; }
             .login-label { font-size:14px; font-weight:600; color:#374151; }
             .login-input { padding:14px 16px; border:2px solid #E5E7EB; border-radius:12px; font-size:16px; font-family:inherit; transition:all 0.2s; outline:none; }
-            .login-input:focus { border-color:#E8601C; box-shadow:0 0 0 4px rgba(232,96,28,0.1); }
-            .login-btn { padding:16px; background: linear-gradient(135deg,#E8601C,#D4540F); color:white; border:none; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; font-family:inherit; margin-top:8px; }
-            .login-btn:hover { transform: translateY(-2px); box-shadow:0 8px 20px rgba(232,96,28,0.4); }
+            .login-input:focus { border-color:#A03472; box-shadow:0 0 0 4px rgba(160,52,114,0.1); }
+            .login-btn { padding:16px; background: linear-gradient(135deg,#A03472,#8A2D62); color:white; border:none; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; font-family:inherit; margin-top:8px; }
+            .login-btn:hover { transform: translateY(-2px); box-shadow:0 8px 20px rgba(160,52,114,0.4); }
             .login-btn:disabled { opacity:0.7; cursor:not-allowed; transform:none; }
-            .login-btn-secondary { padding:12px; background:transparent; color:#E8601C; border:2px solid #E8601C; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit; margin-top:4px; }
+            .login-btn-secondary { padding:12px; background:transparent; color:#A03472; border:2px solid #A03472; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit; margin-top:4px; }
             .login-btn-secondary:hover { background:#FFF5F0; }
             .login-error { background:#FEE2E2; color:#DC2626; padding:12px 16px; border-radius:10px; font-size:14px; text-align:center; display:none; }
             .login-error.show { display:block; }
@@ -214,7 +214,7 @@ function showLoginScreen() {
             </form>
             <div class="login-toggle" style="text-align:center;margin-top:16px;">
                 <span id="loginToggleText" style="font-size:14px;color:#6B7280;">Нет аккаунта? </span>
-                <a href="#" id="loginToggleLink" onclick="toggleLoginMode(event)" style="font-size:14px;color:#E8601C;font-weight:600;text-decoration:none;">Зарегистрироваться</a>
+                <a href="#" id="loginToggleLink" onclick="toggleLoginMode(event)" style="font-size:14px;color:#A03472;font-weight:600;text-decoration:none;">Зарегистрироваться</a>
             </div>
             <div class="login-footer">🔒 Защищено Supabase Auth</div>
             <button type="button" class="guest-btn" onclick="enterGuestMode()">Продолжить без облака (локально)</button>
