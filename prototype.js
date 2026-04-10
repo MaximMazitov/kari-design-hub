@@ -902,7 +902,7 @@ function protoOpenZoom(src) {
         const rect = container.getBoundingClientRect();
         const mx = (e.clientX - rect.left) / rect.width;  // 0..1
         const my = (e.clientY - rect.top) / rect.height;
-        const zoomScale = 2.5;
+        const zoomScale = 1.5;
         const sw = naturalW * zoomScale;
         const sh = naturalH * zoomScale;
         img.style.transform = `scale(${zoomScale})`;
