@@ -223,7 +223,7 @@ body {
 
 .capsules-actions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 16px;
     margin-bottom: 20px;
 }
@@ -257,6 +257,23 @@ body {
     border-color: #8b5cf6;
     background: linear-gradient(135deg, #ede9fe, #ddd6fe);
     box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+.capsule-action-card.proto {
+    border-style: dashed;
+    background: linear-gradient(135deg, #fdf2f8, #fce7f3);
+    border-color: #f9a8d4;
+}
+
+.capsule-action-card.proto:hover {
+    border-color: var(--kari-fuchsia);
+    background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+    box-shadow: 0 4px 12px rgba(160, 52, 114, 0.2);
+}
+
+.capsule-action-card.proto .capsule-action-icon {
+    background: #fce7f3;
+    color: var(--kari-fuchsia);
 }
 
 .capsule-action-icon {

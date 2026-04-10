@@ -101,6 +101,14 @@ function openCapsule(capsuleId) {
     renderItemsPage(capsuleId);
 }
 
+function openPrototypePage() {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-prototype').classList.add('active');
+    if (typeof renderPrototypeWizard === 'function') renderPrototypeWizard();
+}
+window.openPrototypePage = openPrototypePage;
+
 function backToCapsules() {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelector('[data-tab="capsules"]').classList.add('active');
