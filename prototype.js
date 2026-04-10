@@ -121,9 +121,16 @@ function renderPrototypeWizard() {
             .proto-field label { display:block; font-size:13px; color:#6b7280; margin-bottom:6px; font-weight:500; }
             .proto-field input, .proto-field select, .proto-field textarea { width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:10px; font-size:14px; font-family:inherit; }
             .proto-field textarea { min-height:70px; resize:vertical; }
-            .proto-cat-row { display:flex; gap:10px; align-items:center; margin-bottom:8px; }
-            .proto-cat-row input[type="text"] { flex:1; }
-            .proto-cat-row input[type="number"] { width:80px; }
+            .proto-cat-row { display:flex; gap:12px; align-items:center; margin-bottom:10px; padding:12px 16px; background:#f9fafb; border:1px solid var(--gray-200,#e5e7eb); border-radius:12px; transition:all 0.2s; }
+            .proto-cat-row:hover { border-color:var(--gray-300,#d1d5db); box-shadow:0 1px 4px rgba(0,0,0,0.04); }
+            .proto-cat-row input[type="text"] { flex:1; padding:10px 14px; border:1px solid var(--gray-200,#e5e7eb); border-radius:10px; font-size:14px; font-family:inherit; transition:all 0.2s; background:#fff; }
+            .proto-cat-row input[type="text"]:focus { outline:none; border-color:#f97316; box-shadow:0 0 0 3px rgba(249,115,22,0.1); }
+            .proto-cat-count { display:flex; align-items:center; gap:0; }
+            .proto-cat-count button { width:34px; height:34px; border:1px solid var(--gray-200,#e5e7eb); background:#fff; font-size:18px; font-weight:600; cursor:pointer; color:#374151; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+            .proto-cat-count button:hover { background:#f3f4f6; }
+            .proto-cat-count button:first-child { border-radius:10px 0 0 10px; }
+            .proto-cat-count button:last-child { border-radius:0 10px 10px 0; }
+            .proto-cat-count span { width:42px; height:34px; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:600; border-top:1px solid var(--gray-200,#e5e7eb); border-bottom:1px solid var(--gray-200,#e5e7eb); background:#fff; color:#111827; }
             .proto-btn { padding:10px 16px; border-radius:10px; border:none; font-weight:600; cursor:pointer; font-size:14px; }
             .proto-btn-primary { background:#f97316; color:#fff; }
             .proto-btn-secondary { background:#f3f4f6; color:#374151; }
@@ -417,10 +424,14 @@ function renderProtoCategories() {
     list.innerHTML = protoState.categories.map((c,i) => `
         <div class="proto-cat-row">
             <input type="text" value="${escapeHtml(c.name)}" onchange="protoState.categories[${i}].name=this.value;saveProtoState()" placeholder="Название категории">
-            <input type="number" min="0" value="${c.count}" onchange="protoState.categories[${i}].count=parseInt(this.value)||0;saveProtoState()" placeholder="SKU">
-            <button class="proto-btn proto-btn-danger" onclick="protoState.categories.splice(${i},1);saveProtoState();renderProtoCategories()">✕</button>
+            <div class="proto-cat-count">
+                <button onclick="protoCatChangeCount(${i},-1)">−</button>
+                <span>${c.count}</span>
+                <button onclick="protoCatChangeCount(${i},1)">+</button>
+            </div>
+            <button style="width:34px;height:34px;border-radius:10px;border:1px solid #fee2e2;background:#fff;color:#dc2626;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fff'" onclick="protoState.categories.splice(${i},1);saveProtoState();renderProtoCategories()">✕</button>
         </div>
-    `).join('') + `<div style="margin-top:8px;font-size:13px;color:#6b7280">Всего SKU: <strong>${protoState.categories.reduce((s,c)=>s+(c.count||0),0)}</strong></div>`;
+    `).join('') + `<div style="margin-top:12px;font-size:13px;color:#6b7280;text-align:right">Всего SKU: <strong>${protoState.categories.reduce((s,c)=>s+(c.count||0),0)}</strong></div>`;
 }
 
 function protoAddCategory() {
@@ -428,6 +439,15 @@ function protoAddCategory() {
     saveProtoState();
     renderProtoCategories();
 }
+
+function protoCatChangeCount(idx, delta) {
+    const cat = protoState.categories[idx];
+    if (!cat) return;
+    cat.count = Math.max(0, (cat.count || 0) + delta);
+    saveProtoState();
+    renderProtoCategories();
+}
+window.protoCatChangeCount = protoCatChangeCount;
 
 // =============================================
 // SKU
