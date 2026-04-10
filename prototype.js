@@ -487,6 +487,7 @@ function renderProtoSkus() {
                     ${sku.prototypeUrl ? `<button class="proto-btn proto-btn-secondary" style="margin-top:4px;width:140px;font-size:11px" onclick="document.getElementById('proto-file-${sku.id}').click()">📎 Заменить фото</button>` : ''}
                     <input type="file" accept="image/*" id="proto-file-${sku.id}" style="display:none" onchange="protoHandleFileUpload('${sku.id}', this.files[0])">
                     ${sku.prototypeUrl ? `<button class="proto-btn proto-btn-secondary" style="margin-top:8px;width:140px;font-size:12px" onclick="protoAnalyzePrototype('${sku.id}')">${sku.analysis ? '🔄 Переанализ' : '🔍 Анализ AI'}</button>` : ''}
+                    ${sku.analysis ? `<button class="proto-btn proto-btn-primary" style="margin-top:6px;width:140px;font-size:12px" onclick="protoRegenerateOne('${sku.id}')">✨ Промпт</button>` : ''}
                 </div>
                 <div>
                     <!-- ЦВЕТА SKU из палитры капсулы -->
