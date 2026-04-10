@@ -18,8 +18,8 @@ const defaultColors = [
 // =============================================
 // IMAGE COMPRESSION UTILITY
 // =============================================
-const MAX_IMAGE_SIZE_KB = 100;
-const MAX_IMAGE_DIMENSION = 800;
+const MAX_IMAGE_SIZE_KB = 500;
+const MAX_IMAGE_DIMENSION = 2000;
 
 /**
  * Сжимает изображение до указанного размера
