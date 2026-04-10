@@ -871,10 +871,11 @@ window.saveProtoState = saveProtoState;
 // =============================================
 function protoOpenZoom(src) {
     const overlay = document.createElement('div');
-    overlay.className = 'proto-zoom-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2147483646;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
     const container = document.createElement('div');
-    container.className = 'proto-zoom-container';
+    container.style.cssText = 'position:relative;width:80vw;height:80vh;overflow:hidden;cursor:crosshair;';
     const img = document.createElement('img');
+    img.style.cssText = 'position:absolute;top:0;left:0;transform-origin:0 0;max-width:none;max-height:none;';
     img.src = src;
     let scale = 1;
     let naturalW, naturalH;
