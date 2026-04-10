@@ -64,7 +64,7 @@ body {
     border: 2px solid var(--kari-fuchsia);
     border-radius: 10px;
     object-fit: contain;
-    padding: 4px;
+    padding: 1px;
 }
 
 .logo-text h1 { font-size: 16px; font-weight: 700; color: var(--gray-900); }
