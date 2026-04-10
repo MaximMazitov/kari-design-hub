@@ -84,6 +84,27 @@ body {
     cursor: pointer;
 }
 
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.api-status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.api-status-icon { font-size: 10px; }
+.api-status-text { color: var(--gray-600); font-weight: 500; }
+
 .tabs-container {
     display: flex;
     align-items: center;
