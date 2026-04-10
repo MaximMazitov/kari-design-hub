@@ -134,6 +134,9 @@ function renderPrototypeWizard() {
             .proto-sku-body { display:grid; grid-template-columns:140px 1fr; gap:16px; }
             .proto-thumb { width:140px; height:180px; border-radius:10px; background:#e5e7eb; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; border:2px dashed #d1d5db; font-size:12px; color:#6b7280; text-align:center; padding:8px; }
             .proto-thumb img { width:100%; height:100%; object-fit:cover; }
+            .proto-zoom-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2147483646;display:flex;align-items:center;justify-content:center;cursor:zoom-out; }
+            .proto-zoom-container { position:relative;width:80vw;height:80vh;overflow:hidden;cursor:crosshair; }
+            .proto-zoom-container img { position:absolute;top:0;left:0;transform-origin:0 0;transition:none;max-width:none;max-height:none; }
             .proto-analysis-box { background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:10px; font-size:12px; max-height:180px; overflow:auto; white-space:pre-wrap; font-family:monospace; }
             .proto-color-chip { display:inline-flex; align-items:center; gap:6px; padding:4px 8px; background:#fff; border:1px solid #e5e7eb; border-radius:20px; font-size:12px; margin:2px; }
             .proto-color-swatch { width:14px; height:14px; border-radius:50%; border:1px solid rgba(0,0,0,0.1); }
@@ -478,9 +481,10 @@ function renderProtoSkus() {
             </div>
             <div class="proto-sku-body">
                 <div>
-                    <div class="proto-thumb" onclick="document.getElementById('proto-file-${sku.id}').click()">
+                    <div class="proto-thumb" onclick="${sku.prototypeUrl ? `protoOpenZoom('${sku.prototypeUrl.replace(/'/g,"\\'")}')` : `document.getElementById('proto-file-${sku.id}').click()`}">
                         ${sku.prototypeUrl ? `<img src="${sku.prototypeUrl}">` : '📎<br>Загрузить<br>прототип'}
                     </div>
+                    ${sku.prototypeUrl ? `<button class="proto-btn proto-btn-secondary" style="margin-top:4px;width:140px;font-size:11px" onclick="document.getElementById('proto-file-${sku.id}').click()">📎 Заменить фото</button>` : ''}
                     <input type="file" accept="image/*" id="proto-file-${sku.id}" style="display:none" onchange="protoHandleFileUpload('${sku.id}', this.files[0])">
                     ${sku.prototypeUrl ? `<button class="proto-btn proto-btn-secondary" style="margin-top:8px;width:140px;font-size:12px" onclick="protoAnalyzePrototype('${sku.id}')">${sku.analysis ? '🔄 Переанализ' : '🔍 Анализ AI'}</button>` : ''}
                 </div>
@@ -862,6 +866,76 @@ window.protoExportJson = protoExportJson;
 window.protoSaveAsCapsule = protoSaveAsCapsule;
 window.protoState = protoState;
 window.saveProtoState = saveProtoState;
+// =============================================
+// ЗУМ ФОТО ПРОТОТИПА
+// =============================================
+function protoOpenZoom(src) {
+    const overlay = document.createElement('div');
+    overlay.className = 'proto-zoom-overlay';
+    const container = document.createElement('div');
+    container.className = 'proto-zoom-container';
+    const img = document.createElement('img');
+    img.src = src;
+    let scale = 1;
+    let naturalW, naturalH;
+
+    img.onload = () => {
+        naturalW = img.naturalWidth;
+        naturalH = img.naturalHeight;
+        // Fit image to container initially
+        const cw = container.clientWidth || window.innerWidth * 0.8;
+        const ch = container.clientHeight || window.innerHeight * 0.8;
+        scale = Math.min(cw / naturalW, ch / naturalH, 1);
+        img.style.width = naturalW + 'px';
+        img.style.height = naturalH + 'px';
+        img.style.transform = `scale(${scale})`;
+        img.style.transformOrigin = '0 0';
+        // Center
+        const sw = naturalW * scale, sh = naturalH * scale;
+        img.style.left = ((cw - sw) / 2) + 'px';
+        img.style.top = ((ch - sh) / 2) + 'px';
+    };
+
+    // Mouse move → lens zoom
+    container.addEventListener('mousemove', (e) => {
+        const rect = container.getBoundingClientRect();
+        const mx = (e.clientX - rect.left) / rect.width;  // 0..1
+        const my = (e.clientY - rect.top) / rect.height;
+        const zoomScale = 2.5;
+        const sw = naturalW * zoomScale;
+        const sh = naturalH * zoomScale;
+        img.style.transform = `scale(${zoomScale})`;
+        img.style.transformOrigin = '0 0';
+        img.style.left = -(sw - rect.width) * mx + 'px';
+        img.style.top = -(sh - rect.height) * my + 'px';
+    });
+
+    container.addEventListener('mouseleave', () => {
+        if (!naturalW) return;
+        const cw = container.clientWidth;
+        const ch = container.clientHeight;
+        scale = Math.min(cw / naturalW, ch / naturalH, 1);
+        img.style.transform = `scale(${scale})`;
+        const sw = naturalW * scale, sh = naturalH * scale;
+        img.style.left = ((cw - sw) / 2) + 'px';
+        img.style.top = ((ch - sh) / 2) + 'px';
+    });
+
+    // Scroll wheel → zoom in/out
+    container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+    }, { passive: false });
+
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
+    });
+
+    container.appendChild(img);
+    overlay.appendChild(container);
+    document.body.appendChild(overlay);
+}
+window.protoOpenZoom = protoOpenZoom;
+
 window.protoGenerateAnchor = protoGenerateAnchor;
 
 function protoNewCapsule() {
