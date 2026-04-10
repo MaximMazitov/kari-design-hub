@@ -20,18 +20,7 @@ function renderCapsules() {
     // Загружаем палитры для отображения
     const palettes = typeof loadPalettes === 'function' ? loadPalettes() : [];
     
-    grid.innerHTML = `
-        <div class="capsule-card new" onclick="openNewCapsuleModal()">
-            <div class="new-icon">+</div>
-            <div class="new-title">Новая капсула</div>
-            <div class="new-subtitle">Создать коллекцию</div>
-        </div>
-        <div class="capsule-card ai-wizard" onclick="openAIWizard()">
-            <div class="new-icon">🤖</div>
-            <div class="new-title">AI Wizard</div>
-            <div class="new-subtitle">Создать с помощью AI</div>
-        </div>
-    `;
+    grid.innerHTML = '';
     
     capsules.forEach(c => {
         // Проверка на наличие itemsByStatus (для старых капсул)

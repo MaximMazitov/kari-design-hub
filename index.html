@@ -88,9 +88,6 @@
                     <h2>Капсульные коллекции</h2>
                     <p>Управление дизайн-пайплайном</p>
                 </div>
-                <button class="btn btn-primary" onclick="openNewCapsuleModal()">
-                    <span>+</span> Новая капсула
-                </button>
             </div>
             
             <div class="stats-grid">
@@ -116,6 +113,22 @@
                 </div>
             </div>
             
+            <div class="capsules-actions" id="capsulesActions">
+                <div class="capsule-action-card" onclick="openNewCapsuleModal()">
+                    <span class="capsule-action-icon">+</span>
+                    <div>
+                        <div class="capsule-action-title">Новая капсула</div>
+                        <div class="capsule-action-sub">Создать коллекцию</div>
+                    </div>
+                </div>
+                <div class="capsule-action-card ai" onclick="openAIWizard()">
+                    <span class="capsule-action-icon">🤖</span>
+                    <div>
+                        <div class="capsule-action-title">AI Wizard</div>
+                        <div class="capsule-action-sub">Создать с помощью AI</div>
+                    </div>
+                </div>
+            </div>
             <div class="capsules-grid" id="capsulesGrid"></div>
         </div>
         
