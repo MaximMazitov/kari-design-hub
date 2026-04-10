@@ -192,7 +192,7 @@ function showLoginScreen() {
         </style>
         <div class="login-container">
             <div class="login-logo">
-                <div class="login-logo-icon">K</div>
+                <img src="icons/kari-logo.png" alt="KARI" style="width:56px;height:56px;border-radius:16px;object-fit:contain;">
                 <div class="login-logo-text">
                     <h1>KARI Design Hub</h1>
                     <span>Общий workspace команды</span>
