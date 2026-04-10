@@ -326,6 +326,18 @@ window.lazyImageHTML = lazyImageHTML;
 window.observeLazyImages = observeLazyImages;
 window.initLazyLoading = initLazyLoading;
 
+// Зум по клику — берёт реальный src из img (data-src или src)
+function zoomThumbImage(el) {
+    const img = el.tagName === 'IMG' ? el : el.querySelector('img');
+    if (!img) return;
+    const src = img.dataset.src && img.src !== img.dataset.src ? img.dataset.src : img.src;
+    if (!src || src.startsWith('data:image/svg')) return;
+    if (typeof window.protoOpenZoom === 'function') {
+        window.protoOpenZoom(src);
+    }
+}
+window.zoomThumbImage = zoomThumbImage;
+
 // =============================================
 // ITEMS STORAGE
 // =============================================
@@ -737,7 +749,7 @@ function renderTable(items) {
         <thead><tr><th></th><th>SKU</th><th>Название</th><th>Категория</th><th>Цвета</th><th>Статус</th><th>Цена</th></tr></thead>
         <tbody>${filtered.map(i => `
             <tr onclick="openItemModal('${i.id}')">
-                <td><div class="item-image-thumb" ${i.images && i.images.length > 0 ? `onclick="event.stopPropagation();window.protoOpenZoom&&window.protoOpenZoom('${(i.images[0]||'').replace(/'/g,"\\'")}');return false" style="cursor:zoom-in"` : ''}>${i.images && i.images.length > 0
+                <td><div class="item-image-thumb" ${i.images && i.images.length > 0 ? `onclick="event.stopPropagation();zoomThumbImage(this)" style="cursor:zoom-in"` : ''}>${i.images && i.images.length > 0
                     ? lazyImageHTML(i.images[0], i.name, 'item-thumb-img')
                     : '📷'}</div></td>
                 <td><span class="item-sku">${i.sku || i.id || ''}</span></td>
@@ -827,7 +839,7 @@ function openItemModal(itemId) {
 
     // Превью изображения
     const imagePreview = item.images && item.images.length > 0
-        ? `<img src="${item.images[0]}" style="max-width:100%;max-height:200px;border-radius:8px;object-fit:cover;cursor:zoom-in" onclick="event.stopPropagation();window.protoOpenZoom&&window.protoOpenZoom('${(item.images[0]||'').replace(/'/g,"\\'")}');">`
+        ? `<img src="${item.images[0]}" style="max-width:100%;max-height:200px;border-radius:8px;object-fit:cover;cursor:zoom-in" onclick="event.stopPropagation();zoomThumbImage(this);">`
         : `<div class="image-upload-icon">📷</div>
            <div class="image-upload-text">Нажмите для загрузки</div>`;
     
