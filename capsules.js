@@ -50,6 +50,9 @@ function renderCapsules() {
                 paletteColors = palette.colors;
                 paletteName = palette.name;
             }
+        } else if (Array.isArray(c.palette)) {
+            paletteColors = c.palette;
+            paletteName = c.fromPrototype ? 'Прототип' : '';
         } else if (c.palette?.mode === 'manual' && c.palette.colors) {
             paletteColors = c.palette.colors;
             paletteName = 'Ручная';
