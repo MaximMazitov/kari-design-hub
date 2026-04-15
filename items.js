@@ -18,8 +18,8 @@ const defaultColors = [
 // =============================================
 // IMAGE COMPRESSION UTILITY
 // =============================================
-const MAX_IMAGE_SIZE_KB = 2000;
-const MAX_IMAGE_DIMENSION = 4096;
+const MAX_IMAGE_SIZE_KB = 300;
+const MAX_IMAGE_DIMENSION = 1200;
 
 /**
  * Сжимает изображение до указанного размера
@@ -738,8 +738,11 @@ async function handleHeroImageUpload(event) {
         renderItemsPage(currentCapsuleId);
         showToast('Изображение капсулы загружено', 'success');
     } catch (error) {
-        console.error('Ошибка загрузки:', error);
-        showToast('Ошибка загрузки файла', 'error');
+        console.error('Ошибка загрузки hero:', error);
+        const msg = error.name === 'QuotaExceededError'
+            ? 'Хранилище переполнено — удалите старые фото'
+            : 'Ошибка загрузки: ' + (error.message || error);
+        showToast(msg, 'error');
     }
 }
 
@@ -1009,8 +1012,11 @@ async function handleItemImageUpload(event) {
             showToast('Изображение загружено', 'success');
         }
     } catch (error) {
-        console.error('Ошибка загрузки:', error);
-        showToast('Ошибка загрузки файла', 'error');
+        console.error('Ошибка загрузки item image:', error);
+        const msg = error.name === 'QuotaExceededError'
+            ? 'Хранилище переполнено — удалите старые фото'
+            : 'Ошибка загрузки: ' + (error.message || error);
+        showToast(msg, 'error');
     }
 }
 
