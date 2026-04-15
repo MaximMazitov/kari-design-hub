@@ -18,8 +18,8 @@ const defaultColors = [
 // =============================================
 // IMAGE COMPRESSION UTILITY
 // =============================================
-const MAX_IMAGE_SIZE_KB = 300;
-const MAX_IMAGE_DIMENSION = 1200;
+const MAX_IMAGE_SIZE_KB = 2000;
+const MAX_IMAGE_DIMENSION = 4096;
 
 /**
  * Сжимает изображение до указанного размера
@@ -212,6 +212,36 @@ window.saveImageToIDB = saveImageToIDB;
 window.loadImageFromIDB = loadImageFromIDB;
 window.deleteImageFromIDB = deleteImageFromIDB;
 
+/**
+ * Получает реальный src изображения (из IndexedDB или напрямую)
+ */
+async function resolveImageSrc(src) {
+    if (!src) return null;
+    if (src.startsWith('idb://')) {
+        const id = src.replace('idb://', '');
+        return await loadImageFromIDB(id);
+    }
+    return src;
+}
+window.resolveImageSrc = resolveImageSrc;
+
+/**
+ * Загружает все idb:// изображения на странице
+ */
+async function loadIDBImages() {
+    const imgs = document.querySelectorAll('img[data-idb]');
+    for (const img of imgs) {
+        const id = img.dataset.idb;
+        if (!id) continue;
+        const data = await loadImageFromIDB(id);
+        if (data) {
+            img.src = data;
+            img.removeAttribute('data-idb');
+        }
+    }
+}
+window.loadIDBImages = loadIDBImages;
+
 // Инициализируем DB при загрузке
 initImageDB();
 
@@ -326,10 +356,30 @@ window.lazyImageHTML = lazyImageHTML;
 window.observeLazyImages = observeLazyImages;
 window.initLazyLoading = initLazyLoading;
 
+function _fallbackZoom(src) {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2147483646;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+    ov.innerHTML = `<img src="${src}" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px;">`;
+    ov.onclick = () => ov.remove();
+    document.body.appendChild(ov);
+}
+
 // Зум по клику — берёт реальный src из img
 function zoomThumbImage(el) {
     const img = el.tagName === 'IMG' ? el : el.querySelector('img');
     if (!img) { console.warn('[Zoom] no img found'); return; }
+
+    // Если изображение из IDB — загрузим и откроем
+    if (img.dataset.idb) {
+        loadImageFromIDB(img.dataset.idb).then(data => {
+            if (data) {
+                if (typeof window.protoOpenZoom === 'function') { window.protoOpenZoom(data); }
+                else { _fallbackZoom(data); }
+            }
+        });
+        return;
+    }
+
     // Приоритет: currentSrc > src > data-src
     let src = img.currentSrc || img.src;
     // Пропускаем placeholder
@@ -337,7 +387,6 @@ function zoomThumbImage(el) {
         src = img.dataset.src || img.getAttribute('data-src');
     }
     if (!src) { console.warn('[Zoom] no src found'); return; }
-    console.log('[Zoom] opening:', src.substring(0, 80));
 
     // Используем protoOpenZoom из prototype.js, или fallback inline
     if (typeof window.protoOpenZoom === 'function') {
@@ -768,7 +817,7 @@ function renderTable(items) {
         <tbody>${filtered.map(i => `
             <tr onclick="openItemModal('${i.id}')">
                 <td><div class="item-image-thumb" ${i.images && i.images.length > 0 ? `onclick="event.stopPropagation();zoomThumbImage(this)" style="cursor:zoom-in"` : ''}>${i.images && i.images.length > 0
-                    ? lazyImageHTML(i.images[0], i.name, 'item-thumb-img')
+                    ? (i.images[0].startsWith('idb://') ? `<img class="item-thumb-img" data-idb="${i.images[0].replace('idb://','')}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect fill='%23f3f4f6' width='60' height='60'/%3E%3Ctext x='30' y='35' text-anchor='middle' fill='%239ca3af' font-size='20'%3E📷%3C/text%3E%3C/svg%3E" alt="${i.name}">` : lazyImageHTML(i.images[0], i.name, 'item-thumb-img'))
                     : '📷'}</div></td>
                 <td><span class="item-sku">${i.sku || i.id || ''}</span></td>
                 <td><span class="item-name">${i.name}</span></td>
@@ -780,8 +829,11 @@ function renderTable(items) {
         `).join('')}</tbody>
     </table>`;
 
-    // После рендера запустим lazy loading
-    setTimeout(() => observeLazyImages(), 0);
+    // После рендера запустим lazy loading и загрузку IDB-изображений
+    setTimeout(() => {
+        observeLazyImages();
+        loadIDBImages();
+    }, 0);
 
     return html;
 }
@@ -856,8 +908,10 @@ function openItemModal(itemId) {
     const paletteColors = capsule ? getCapsulePaletteColors(capsule) : [];
 
     // Превью изображения
-    const imagePreview = item.images && item.images.length > 0
-        ? `<img src="${item.images[0]}" style="max-width:100%;max-height:200px;border-radius:8px;object-fit:cover;cursor:zoom-in" onclick="event.stopPropagation();zoomThumbImage(this);">`
+    const imgSrc = item.images && item.images.length > 0 ? item.images[0] : null;
+    const isIDB = imgSrc && imgSrc.startsWith('idb://');
+    const imagePreview = imgSrc
+        ? `<img id="modalItemImage" ${isIDB ? `data-idb="${imgSrc.replace('idb://','')}"` : `src="${imgSrc}"`} style="max-width:100%;max-height:200px;border-radius:8px;object-fit:cover;cursor:zoom-in" onclick="event.stopPropagation();zoomThumbImage(this);">`
         : `<div class="image-upload-icon">📷</div>
            <div class="image-upload-text">Нажмите для загрузки</div>`;
     
@@ -981,6 +1035,14 @@ function openItemModal(itemId) {
         </div>
     `;
     document.getElementById('itemModal').classList.add('active');
+
+    // Загрузить IDB-изображение если есть
+    const modalImg = document.getElementById('modalItemImage');
+    if (modalImg && modalImg.dataset.idb) {
+        loadImageFromIDB(modalImg.dataset.idb).then(data => {
+            if (data) { modalImg.src = data; modalImg.removeAttribute('data-idb'); }
+        });
+    }
 }
 
 // =============================================
@@ -1000,11 +1062,16 @@ async function handleItemImageUpload(event) {
         showToast('Сжатие изображения...', 'success');
         const imageData = await compressImage(file);
 
-        // Сохраняем в артикул
+        // Сохраняем фото в IndexedDB (не в localStorage!)
+        const imageId = `item-${currentCapsuleId}-${currentItemId}`;
+        await saveImageToIDB(imageId, imageData);
+
+        // В артикул сохраняем только ссылку на IndexedDB
         const item = getItemById(currentCapsuleId, currentItemId);
         if (item) {
             updateItem(currentCapsuleId, currentItemId, {
-                images: [imageData]
+                images: [`idb://${imageId}`],
+                imageId: imageId
             });
 
             // Обновляем превью в модалке
@@ -1027,7 +1094,9 @@ function removeItemImage() {
         confirmText: '🗑️ Удалить',
         danger: true,
         onConfirm: () => {
-            updateItem(currentCapsuleId, currentItemId, { images: [] });
+            const item = getItemById(currentCapsuleId, currentItemId);
+            if (item && item.imageId) deleteImageFromIDB(item.imageId);
+            updateItem(currentCapsuleId, currentItemId, { images: [], imageId: null });
             openItemModal(currentItemId);
             showToast('Изображение удалено', 'success');
         }
