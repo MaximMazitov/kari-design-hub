@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>KARI Wizard Test</title>
+    <meta charset="UTF-8">
+</head>
+<body style="font-family: monospace; padding: 20px;">
+    <h1>🧪 Тест AI Wizard</h1>
+    <p>Запускает генерацию с минимальными параметрами (2 образа, 5 артикулов)</p>
+    <button onclick="runTest()" style="padding: 10px 20px; font-size: 16px;">▶️ Запустить тест</button>
+    <br><br>
+    <div id="status" style="background: #f0f0f0; padding: 15px; border-radius: 5px;">
+        Ожидание запуска...
+    </div>
+    <pre id="log" style="background: #000; color: #0f0; padding: 15px; margin-top: 20px; max-height: 400px; overflow-y: auto;"></pre>
+
+    <script>
+        const log = document.getElementById('log');
+        const status = document.getElementById('status');
+
+        function addLog(msg) {
+            log.textContent += msg + '\n';
+            log.scrollTop = log.scrollHeight;
+        }
+
+        async function runTest() {
+            status.textContent = '🔄 Запуск теста...';
+            status.style.background = '#ffffcc';
+            log.textContent = '';
+
+            addLog('=== KARI AI Wizard Test ===');
+            addLog('Параметры: 2 образа, 5 артикулов');
+            addLog('');
+
+            try {
+                // Открываем основное приложение в iframe
+                addLog('[1/3] Загрузка главного приложения...');
+
+                const iframe = document.createElement('iframe');
+                iframe.src = 'http://localhost:8080/';
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+
+                // Ждем загрузки
+                await new Promise(resolve => {
+                    iframe.onload = () => {
+                        addLog('[2/3] Приложение загружено');
+                        setTimeout(resolve, 2000); // Ждем инициализации
+                    };
+                });
+
+                const win = iframe.contentWindow;
+
+                // Проверяем что функция доступна
+                if (typeof win.generateCapsuleWithAI !== 'function') {
+                    throw new Error('generateCapsuleWithAI не найдена!');
+                }
+
+                addLog('[3/3] Запуск генерации...');
+                addLog('');
+
+                const result = await win.generateCapsuleWithAI({
+                    bestseller: {
+                        sku: 'AW25C612',
+                        name: 'Бомбер демисезонный',
+                        description: 'Контрастная молния, нашивки на рукавах',
+                        colors: 'чёрный + оранжевый',
+                        price: 4990,
+                        cost: 1180,
+                        sold: 47200,
+                        imageBase64: null,
+                        hasImage: false
+                    },
+                    collection: {
+                        name: 'Test Mini Collection',
+                        season: 'AW26',
+                        ageGroup: 'kid',
+                        gender: 'male',
+                        segment: 'standard'
+                    },
+                    requirements: {
+                        looksCount: 2,
+                        itemsCount: 5,
+                        notes: 'Тестовая генерация'
+                    }
+                });
+
+                addLog('=== РЕЗУЛЬТАТ ===');
+                addLog('');
+
+                if (result.success) {
+                    addLog('✅ УСПЕХ!');
+                    addLog('');
+                    addLog('Создано артикулов: ' + (result.data?.items?.length || 0));
+                    addLog('Цветов в палитре: ' + (result.data?.palette?.colors?.length || 0));
+                    addLog('Образов: ' + (result.data?.looks?.length || 0));
+                    addLog('');
+                    addLog('=== Первый артикул ===');
+                    if (result.data?.items?.[0]) {
+                        const item = result.data.items[0];
+                        addLog('Название: ' + item.name);
+                        addLog('Категория: ' + item.category);
+                        addLog('Промпт (первые 200 символов):');
+                        addLog(item.prompt?.substring(0, 200) + '...');
+                    }
+
+                    status.textContent = '✅ Тест успешно завершен!';
+                    status.style.background = '#ccffcc';
+                } else {
+                    addLog('❌ ОШИБКА');
+                    addLog('');
+                    addLog('Сообщение: ' + result.error);
+                    if (result.technicalError) {
+                        addLog('Техническая ошибка: ' + result.technicalError);
+                    }
+                    if (result.rawResponse) {
+                        addLog('');
+                        addLog('=== Сырой ответ (первые 500 символов) ===');
+                        addLog(result.rawResponse.substring(0, 500));
+                    }
+
+                    status.textContent = '❌ Тест завершился с ошибкой';
+                    status.style.background = '#ffcccc';
+                }
+
+            } catch (error) {
+                addLog('');
+                addLog('=== ИСКЛЮЧЕНИЕ ===');
+                addLog('Ошибка: ' + error.message);
+                addLog('Stack: ' + error.stack);
+
+                status.textContent = '❌ Критическая ошибка';
+                status.style.background = '#ffcccc';
+            }
+        }
+    </script>
+</body>
+</html>
